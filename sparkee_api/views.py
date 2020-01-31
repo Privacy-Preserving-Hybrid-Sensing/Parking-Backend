@@ -1,9 +1,10 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.http import JsonResponse
-from sparkee_common.models import ParkingSlot, ParkingAvailabilityLog, ParticipantMovementLog
+from sparkee_common.models import ParkingSlot, ParkingAvailabilityLog, ParticipantMovementLog, ParkingAvailabilitySubscription
 import json
 from django.core import serializers
+import datetime
 
 def parking_slots_near(request, radius, longitude, lattitude):
     r = float(radius)
@@ -63,5 +64,14 @@ def summary_all(request):
     send = {
       'participants': cnt_participants,
       'parking_slots': cnt_parking_slots
+    }
+    return JsonResponse(send, safe=False)
+
+
+def subscribe_parking_availability(request, radius, longitude, lattitude, participant_uuid):
+    status, current_time = ParkingAvailabilitySubscription.subscribe(radius, longitude, lattitude, participant_uuid)
+    send = {
+      'status': status,
+      'ts': current_time
     }
     return JsonResponse(send, safe=False)
