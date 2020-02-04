@@ -403,13 +403,22 @@
 
 <script>
 
-var DEFAULT_RADIUS = 0.1;
 var DEFAULT_POSITION_LATT = -35.275293;
 var DEFAULT_POSITION_LONG = 149.119132;
 
 var mymap = null;
-var greenIcon = new L.Icon({
-  iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+// var greenIcon = new L.Icon({
+//   iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+//   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+//   iconSize: [30, 41],
+//   iconAnchor: [12, 41],
+//   popupAnchor: [1, -34],
+//   shadowSize: [41, 41]
+// });
+
+
+var confirmed_available = new L.Icon({
+  iconUrl: '/static/img/confirmed_available.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
   iconSize: [30, 41],
   iconAnchor: [12, 41],
@@ -417,29 +426,89 @@ var greenIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-
-var parkingIcon = new L.Icon({
-  iconUrl: 'http://ec2-3-133-91-181.us-east-2.compute.amazonaws.com:8000/static/img/confirmed_available.png',
+var confirmed_unavailable = new L.Icon({
+  iconUrl: '/static/img/confirmed_unavailable.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
   iconSize: [30, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
   shadowSize: [41, 41]
 });
+
+var confirmed_available = new L.Icon({
+  iconUrl: '/static/img/confirmed_available.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [30, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+var unconfirmed_minus_2 = new L.Icon({
+  iconUrl: '/static/img/unconfirmed_minus_2.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [30, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+var unconfirmed_minus_1 = new L.Icon({
+  iconUrl: '/static/img/unconfirmed_minus_1.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [30, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+var unconfirmed_0 = new L.Icon({
+  iconUrl: '/static/img/unconfirmed_0.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [30, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+var unconfirmed_plus_1 = new L.Icon({
+  iconUrl: '/static/img/unconfirmed_plus_1.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [30, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+var unconfirmed_plus_2 = new L.Icon({
+  iconUrl: '/static/img/unconfirmed_plus_2.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [30, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
 
 function show_sample() {
 
-  mymap = L.map('mapid').setView([DEFAULT_POSITION_LATT, DEFAULT_POSITION_LONG], 19);
+  mymap = L.map('mapid').setView([DEFAULT_POSITION_LATT, DEFAULT_POSITION_LONG], 16);
 
   L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
-    maxZoom: 22,
+    maxZoom: 23,
     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
       '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
       'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
     id: 'mapbox/streets-v11'
   }).addTo(mymap);
 
-  L.marker([DEFAULT_POSITION_LATT, DEFAULT_POSITION_LONG], {icon: greenIcon} ).addTo(mymap).openPopup();
+  // L.marker([DEFAULT_POSITION_LATT, DEFAULT_POSITION_LONG], {icon: greenIcon} ).addTo(mymap).openPopup();
+  // var circle = L.circle([DEFAULT_POSITION_LATT, DEFAULT_POSITION_LONG], {
+  //   color: '#C6C3DA',
+  //   fillColor: 'blue',
+  //   fillOpacity: 0.0,
+  //   radius: 100
+  // }).addTo(mymap);
   // L.marker([51.5, -0.09]).addTo(mymap)
   //   .bindPopup(card).openPopup();
 
@@ -472,10 +541,38 @@ function show_sample() {
 </script>
 
 <script>
+
+function uuid() {
+    function randomDigit() {
+        if (crypto && crypto.getRandomValues) {
+            var rands = new Uint8Array(1);
+            crypto.getRandomValues(rands);
+            return (rands[0] % 16).toString(16);
+        } else {
+            return ((Math.random() * 16) | 0).toString(16);
+        }
+    }
+    var crypto = window.crypto || window.msCrypto;
+    return 'xxxxxxxx-xxxx-4xxx-8xxx-xxxxxxxxxxxx'.replace(/x/g, randomDigit);
+}
+
+var LOCAL_UUID = '';
+
+function localUUID() {
+  var device_uuid = localStorage.getItem("device_uuid");  
+  if(device_uuid == null || typeof(device_uuid) === undefined) {
+    device_uuid = uuid();
+    localStorage.setItem('device_uuid', device_uuid);
+  }
+  LOCAL_UUID = device_uuid;
+}
+
 $( document ).ready(function() {
+  localUUID();
   resize_map_panel();
   show_sample();
-  download_parking_slots_coordinates();
+  // subscribe_to_sparkee();
+  // download_parking_slots_coordinates();
   download_summary();
   start_control_functions();
 });
@@ -499,9 +596,10 @@ function start_control_functions() {
     resize_map_panel();
   });
 }
+
 function download_summary() {
   $.ajax({
-    url: "/api/summary/near/" + DEFAULT_RADIUS + "/"+ DEFAULT_POSITION_LONG +"/" + DEFAULT_POSITION_LATT, 
+    url: "/api/summary/all", 
     success: function(result){
       console.log(result);
       $("#participants").html(result.participants);
@@ -511,20 +609,29 @@ function download_summary() {
   
 }
 
-function download_parking_slots_coordinates() {
-  $.ajax({
-    url: "/api/parking_slots/near/" + DEFAULT_RADIUS + "/"+ DEFAULT_POSITION_LONG +"/" + DEFAULT_POSITION_LATT, 
-    success: function(result){
-      console.log(result);
-      result.forEach(function(item) {
-        console.log(item);
-        L.marker([item.lattitude, item.longitude], {icon: parkingIcon} ).addTo(mymap).openPopup();
-      });
-      // $("#div1").html(result);
-    }
-  });
+// function subscribe_to_sparkee() {
+//     $.ajax({
+//       url: "/api/subscribe/parking_availability/near/"+ DEFAULT_POSITION_LONG +"/" + DEFAULT_POSITION_LATT + "/" + LOCAL_UUID, 
+//       success: function(result){
+//         console.log("Hasil Subscribe");
+//         console.log(result);
+//         // $("#div1").html(result);
+//       }
+//     });
+
+// }
+
+// function download_parking_slots_coordinates() {
+//   $.ajax({
+//     url: "/api/parking_slots/near/"+ DEFAULT_POSITION_LONG +"/" + DEFAULT_POSITION_LATT, 
+//     success: function(result){
+//       result.forEach(function(item) {
+//         plot_realtime(item.lattitude, item.longitude);
+//       });
+//     }
+//   });
   
-}
+// }
 
 function resize_map_panel() {
   var width = $( "#content" ).width();
@@ -548,36 +655,83 @@ function resize_map_panel() {
 
 <script>
 
-function plot_realtime(lat, lon) {
-  L.marker([lat, lon], {icon: parkingIcon} ).addTo(mymap).openPopup();
+function loop_every_parking_slots(json_arr) {
+  json_arr.forEach(function(item) {  
+    plot_realtime(item.lattitude, item.longitude, item.status, item.ts_update);
+  });
 }
+
+function plot_realtime(lat, lon, status, ts_update) {
+  
+  // TODO: ts_update should be displayed when the bubbel clicked
+  var tmp_icon = null;
+  switch(status) {
+    case -3:
+      tmp_icon = confirmed_unavailable;
+      break;
+    case -2:
+      tmp_icon = unconfirmed_minus_2;
+      break;
+    case -1:
+      tmp_icon = unconfirmed_minus_1;
+      break;
+    case 0:
+      tmp_icon = unconfirmed_0;
+      break;
+    case 1:
+      tmp_icon = unconfirmed_plus_1;
+      break;
+    case 2:
+      tmp_icon = unconfirmed_plus_2;
+      break;
+    case 3:
+      tmp_icon = confirmed_available;
+      break;
+  }
+
+  L.marker([lat, lon], {icon: tmp_icon} ).addTo(mymap).openPopup();
+}
+
 
 var ws = new WebSocket('ws://ec2-3-133-91-181.us-east-2.compute.amazonaws.com:15674/ws');
 var client = Stomp.over(ws);
+
 var on_connect = function() {
     console.log('connected');
-    subs_time = client.subscribe('/exchange/time', function(d) {
-      // var p = JSON.parse(d.body);
+
+    subs_time = client.subscribe('/topic/time', function(d) {
       console.log(d.body);
       $("#date_time").text(d.body);
     });
 
-    subs_DEVICE_TO_SERVER = client.subscribe('/exchange/DEVICE_TO_SERVER', function(d) {
-      // var p = JSON.parse(d.body);
-      console.log(d.body);
-      data = JSON.parse(d.body);
-      // alert(data);
-      if(data.type == 'parking_slot_registration') {
-        plot_realtime(data.latt, data.long);
-      }
-      // $("#date_time").text(d.body);
+    subscribe_all_zone = client.subscribe('/topic/zone.*', function(d) {
+      json_arr = JSON.parse(d.body);
+      if(json_arr.type == 'parking_slots')
+        loop_every_parking_slots(json_arr.payload);
+      else if(json_arr.type == 'participant_credit')
+        console.log("TODO: Implement Participant Credit");
+      
     });
+
+    // SEND SUBSCRIPTION REQUEST
+    registration_obj = {
+      'action': 'participant_location', 
+      'device_uuid': LOCAL_UUID, 
+      'device_type': 'web',
+      'long': DEFAULT_POSITION_LONG,
+      'latt': DEFAULT_POSITION_LATT,
+      'msg' : 'New Web Session'
+    };
+
+    client.send('/topic/PARTICIPANT_TO_SERVER', null, JSON.stringify(registration_obj));
 };
 
 var on_error =  function() {
     console.log('error');
 };
+
 client.connect('mobile', 'ieGh4thi', on_connect, on_error, '/');
+
 </script>
 
 </html>
