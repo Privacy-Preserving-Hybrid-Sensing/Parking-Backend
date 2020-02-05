@@ -10,7 +10,7 @@
   <meta name="description" content="">
   <meta name="author" content="">
 
-  <title>SParkee - Parking Map</title>
+  <title>Crowdsourced Smart Parking</title>
 
   <link rel="icon" type="image/ico" href='{% static "img/anu.ico" %}'>
   <!-- Custom fonts for this template-->
@@ -45,11 +45,11 @@
       <!-- Divider -->
       <hr class="sidebar-divider my-0">
 
-      <!-- Nav Item - Parking Map -->
+      <!-- Nav Item - Crowdsourced Smart Parking -->
       <li class="nav-item active">
         <a class="nav-link" href="/">
           <i class="fas fa-fw fa-map-marked-alt"></i>
-          <span>Parking Map</span></a>
+          <span>Crowdsourced Smart Parking</span></a>
       </li>
 
 
@@ -82,14 +82,14 @@
 
           <div class="d-none d-sm-inline-block form-inline mr-auto  my-md-0 ">
             <div class="input-group">
-              <h1 class="h3 mb-0 text-gray-800">Parking Map</h1>
+              <h1 class="h3 mb-0 text-gray-800">Crowdsourced Smart Parking</h1>
             </div>
             <!-- <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-stream fa-sm text-white-50"></i> Show Debug</a> -->
           </div>
 
           <form class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-400 navbar-search">
             <div class="input-group">
-              <input type="text" class="form-control bg-light border-0 small" placeholder="Search for..." aria-label="Search" aria-describedby="basic-addon2">
+              <input type="text" class="form-control bg-light border-0 small" placeholder="Search for Parking Zone ..." aria-label="Search" aria-describedby="basic-addon2">
               <div class="input-group-append">
                 <button class="btn btn-primary" type="button">
                   <i class="fas fa-search fa-sm"></i>
@@ -281,7 +281,7 @@
 
           <!-- Page Heading -->
 <!--           <div class="d-sm-flex align-items-center justify-content-between mb-4">
-            <h1 class="h3 mb-0 text-gray-800">Parking Map</h1>
+            <h1 class="h3 mb-0 text-gray-800">Crowdsourced Smart Parking</h1>
             <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-stream fa-sm text-white-50"></i> Show Debug</a>
           </div>
  -->
@@ -314,6 +314,25 @@
                   <div class="card-body">
                     <div class="row no-gutters align-items-center">
                       <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1" >Parking Zones</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="parking_zones">-</div>
+                      </div>
+                      <div class="col-auto">
+                        <i class="fas fa-user-tag fa-3x text-gray-400"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+
+            <div style="margin: 10px">
+            </div>
+
+            <div class="col-xs-3 col-sm-offset-4">
+                <div class="card border-left-success shadow h-60 py-2">
+                  <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                      <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1" >Participants</div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800" id="participants">-</div>
                       </div>
@@ -324,6 +343,7 @@
                   </div>
                 </div>
             </div>
+
           </div>
 
         </div>
@@ -604,6 +624,7 @@ function download_summary() {
       console.log(result);
       $("#participants").html(result.participants);
       $("#parking_slots").html(result.parking_slots);
+      $("#parking_zones").html(result.parking_zones);
     }
   });
   
@@ -718,7 +739,7 @@ var on_connect = function() {
       'action': 'participant_location', 
       'device_uuid': LOCAL_UUID, 
       'device_type': 'web',
-      'long': DEFAULT_POSITION_LON,
+      'lon': DEFAULT_POSITION_LON,
       'lat': DEFAULT_POSITION_LAT,
       'msg' : 'New Web Session'
     };
