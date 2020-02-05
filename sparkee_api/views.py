@@ -8,7 +8,7 @@ from django.core import serializers
 
 def summary_all(request):
 
-    cnt_parking_slots = ParkingSlot.objects.distinct('lattitude','longitude').count()
+    cnt_parking_slots = ParkingSlot.objects.distinct('latitude','longitude').count()
     cnt_participants = ParkingAvailabilityLog.objects.distinct('participant_uuid').count()
 
     send = {
