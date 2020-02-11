@@ -132,4 +132,4 @@ dmypy.json
 static/
 
 # logs
-logs/
+logs/*
