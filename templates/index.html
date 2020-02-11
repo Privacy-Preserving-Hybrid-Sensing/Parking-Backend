@@ -12,7 +12,7 @@
 
   <title>Crowdsourced Smart Parking</title>
 
-  <link rel="icon" type="image/ico" href='{% static "img/anu.ico" %}'>
+  <link rel="icon" type="image/png" href='{% static "img/csp_logo_mini_grey.png" %}'>
   <!-- Custom fonts for this template-->
   <link href='{% static "vendor/fontawesome-free/css/all.min.css" %}' rel="stylesheet" type="text/css">
   <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
@@ -26,43 +26,6 @@
 
   <!-- Page Wrapper -->
   <div id="wrapper">
-
-    <!-- Sidebar -->
-    <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
-
-      <!-- Sidebar - Brand -->
-      <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/" id="logo_placeholder">
-        <div class="fas" id="logo_big">
-          <!-- <i class="fas fa-laugh-wink"></i> -->
-          <img src='{% static "img/anu_logo.png" %}'  width="140px">
-        </div>
-        <div class="fas" id="logo_small" style="display: none">
-          <img src='{% static "img/anu_text.png" %}'  width="75px">
-          
-        </div>
-      </a>
-
-      <!-- Divider -->
-      <hr class="sidebar-divider my-0">
-
-      <!-- Nav Item - Crowdsourced Smart Parking -->
-      <li class="nav-item active">
-        <a class="nav-link" href="/">
-          <i class="fas fa-fw fa-map-marked-alt"></i>
-          <span>Crowdsourced Smart Parking</span></a>
-      </li>
-
-
-      <!-- Divider -->
-      <hr class="sidebar-divider d-none d-md-block">
-
-      <!-- Sidebar Toggler (Sidebar) -->
-      <div class="text-center d-none d-md-inline">
-        <button class="rounded-circle border-0" id="sidebarToggle"></button>
-      </div>
-
-    </ul>
-    <!-- End of Sidebar -->
 
     <!-- Content Wrapper -->
     <div id="content-wrapper" class="d-flex flex-column">
@@ -82,7 +45,7 @@
 
           <div class="d-none d-sm-inline-block form-inline mr-auto  my-md-0 ">
             <div class="input-group">
-              <h1 class="h3 mb-0 text-gray-800">Crowdsourced Smart Parking</h1>
+              <h1 class="h3 mb-0 text-gray-800">Parking Map</h1>
             </div>
             <!-- <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-stream fa-sm text-white-50"></i> Show Debug</a> -->
           </div>
@@ -279,72 +242,12 @@
         <!-- Begin Page Content -->
         <div class="container-fluid">
 
-          <!-- Page Heading -->
-<!--           <div class="d-sm-flex align-items-center justify-content-between mb-4">
-            <h1 class="h3 mb-0 text-gray-800">Crowdsourced Smart Parking</h1>
-            <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-stream fa-sm text-white-50"></i> Show Debug</a>
-          </div>
- -->
           <!-- Content Row -->
           <div class="row" id="row_map">
             <div id="mapid"></div>
           </div>
 
-          <div class="box">
-            <div class="col-xs-3 col-sm-offset-4">
-                <div class="card border-left-success shadow h-60 py-2">
-                  <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                      <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Parking Slots</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="parking_slots">-</div>
-                      </div>
-                      <div class="col-auto">
-                        <i class="fas fa-parking fa-3x text-gray-400"></i>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-            </div>
-            <div style="margin: 10px">
-            </div>
 
-            <div class="col-xs-3 col-sm-offset-4">
-                <div class="card border-left-success shadow h-60 py-2">
-                  <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                      <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1" >Parking Zones</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="parking_zones">-</div>
-                      </div>
-                      <div class="col-auto">
-                        <i class="fas fa-user-tag fa-3x text-gray-400"></i>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-            </div>
-
-            <div style="margin: 10px">
-            </div>
-
-            <div class="col-xs-3 col-sm-offset-4">
-                <div class="card border-left-success shadow h-60 py-2">
-                  <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                      <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1" >Participants</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="participants">-</div>
-                      </div>
-                      <div class="col-auto">
-                        <i class="fas fa-user-tag fa-3x text-gray-400"></i>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-            </div>
-
-          </div>
 
         </div>
         <!-- /.container-fluid -->
@@ -410,7 +313,7 @@
   <script src='{% static "vendor/jquery-easing/jquery.easing.min.js" %}'></script>
 
   <!-- Custom scripts for all pages-->
-  <script src='{% static "js/sb-admin-2.min.js" %}'></script>
+  <script src='{% static "js/sb-admin-2.js" %}'></script>
 
   <!-- Page level plugins -->
   <!-- <script src='{% static "vendor/chart.js/Chart.min.js" %}'></script> -->
@@ -423,8 +326,8 @@
 
 <script>
 
-var DEFAULT_POSITION_LAT = -35.275293;
-var DEFAULT_POSITION_LON = 149.119132;
+var DEFAULT_POSITION_LAT = -35.27667;
+var DEFAULT_POSITION_LON = 149.11925;
 
 var mymap = null;
 // var greenIcon = new L.Icon({
@@ -455,14 +358,6 @@ var confirmed_unavailable = new L.Icon({
   shadowSize: [41, 41]
 });
 
-var confirmed_available = new L.Icon({
-  iconUrl: '/static/img/confirmed_available.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-  iconSize: [30, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
 
 var unconfirmed_minus_2 = new L.Icon({
   iconUrl: '/static/img/unconfirmed_minus_2.png',
@@ -512,7 +407,7 @@ var unconfirmed_plus_2 = new L.Icon({
 
 function show_sample() {
 
-  mymap = L.map('mapid').setView([DEFAULT_POSITION_LAT, DEFAULT_POSITION_LON], 16);
+  mymap = L.map('mapid').setView([DEFAULT_POSITION_LAT, DEFAULT_POSITION_LON], 19);
 
   L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
     maxZoom: 23,
@@ -587,35 +482,45 @@ function localUUID() {
   LOCAL_UUID = device_uuid;
 }
 
+function resize_width_height() {
+  var width =  $(window).width();
+  var height =  $(window).height();
+  $("#content-wrapper").css("width", width );
+  $("#content-wrapper").css("height", height );
+}
+
 $( document ).ready(function() {
+  resize_width_height();
   localUUID();
   resize_map_panel();
   show_sample();
   // subscribe_to_sparkee();
   // download_parking_slots_coordinates();
   download_summary();
-  start_control_functions();
+  // start_control_functions();
 });
 
+
 $( window ).resize(function() {
+  resize_width_height();
   resize_map_panel();
 });
 
-function start_control_functions() {
-  $("#sidebarToggle").click(function() {
-    if($("#logo_placeholder").attr("toggle")) {
-      $("#logo_big").removeAttr("style");
-      $("#logo_small").css("display", "none");
-      $("#logo_placeholder").removeAttr("toggle");
-    }
-    else {
-      $("#logo_big").css("display", "none");
-      $("#logo_small").removeAttr("style");
-      $("#logo_placeholder").attr("toggle", "small");
-    }
-    resize_map_panel();
-  });
-}
+// function start_control_functions() {
+//   $("#sidebarToggle").click(function() {
+//     if($("#logo_placeholder").attr("toggle")) {
+//       $("#logo_big").removeAttr("style");
+//       $("#logo_small").css("display", "none");
+//       $("#logo_placeholder").removeAttr("toggle");
+//     }
+//     else {
+//       $("#logo_big").css("display", "none");
+//       $("#logo_small").removeAttr("style");
+//       $("#logo_placeholder").attr("toggle", "small");
+//     }
+//     resize_map_panel();
+//   });
+// }
 
 function download_summary() {
   $.ajax({
@@ -725,7 +630,7 @@ var on_connect = function() {
       $("#date_time").text(d.body);
     });
 
-    subscribe_all_zone = client.subscribe('/topic/zone.*', function(d) {
+    subscribe_all_zone = client.subscribe('/topic/parking_slot.zone.*', function(d) {
       json_arr = JSON.parse(d.body);
       if(json_arr.type == 'parking_slots')
         loop_every_parking_slots(json_arr.payload);

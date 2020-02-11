@@ -3,7 +3,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from logging import getLogger
 import pika
 import json
-from sparkee_common.models import ParkingAvailabilityLog, ParticipantMovementLog, ParkingSlot, ParkingAvailabilitySubscription, ParkingZone, ParticipantCredit, DataParticipationParkingAvailability
+from sparkee_common.models import ParkingAvailabilityLog, ParticipantMovementLog, ParkingSlot, ParkingAvailabilitySubscription, ParkingZone, ParticipantCredit, DataParticipationParkingAvailability, ParkingZonePolygonGeoPoint
 from datetime import datetime, timedelta, date
 from django.conf import settings
 import threading
@@ -12,7 +12,7 @@ import environ
 import time
 from django.db.models.functions import Cast
 from django.db.models import TextField
-
+import AMQPPublisher
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -30,16 +30,24 @@ parameters = pika.ConnectionParameters(
     credentials
 )
 
-connection_send = pika.BlockingConnection(parameters)
-channel_send = connection_send.channel()
+# connection_send = pika.BlockingConnection(parameters)
+# channel_send = connection_send.channel()
 
 connection_recv = pika.BlockingConnection(parameters)
 channel_recv = connection_recv.channel()
 queue_name_recv = channel_recv.queue_declare('', exclusive=True).method.queue
 channel_recv.queue_bind(exchange="amq.topic", routing_key=DEFAULT_PARTICIPANT_TO_SERVER_ROUTING_KEY, queue=queue_name_recv)
 
+amqp_url = 'amqp://'+ env('RABBITUSER') +':'+ env('RABBITUSER') +'@'+ env('RABBITHOST') +':'+ env('RABBITPORT') +'/%2F?connection_attempts=30&heartbeat=3600'
+publisher = AMQPPublisher(amqp_url)
+
+class CREDIT_Calculation_Thread(threading.Thread):
+    def run(self):
+        while True:
+          self.calculate_parking_log()
+          time.sleep(30)
+
 class MAJORITY_Thread(threading.Thread):
-    channel = None
 
     def calculate_parking_log(self):
         time_treshold = datetime.now() - timedelta(minutes=DEFAULT_MINUTE_THRESHOLD)
@@ -109,13 +117,12 @@ class AMQP_Publish_Time_Thread(threading.Thread):
           
           time.sleep(1)
 
-class AMQP_Publish_Parking_zone_thread(threading.Thread):
+class AMQP_Publish_Parking_Slots_thread(threading.Thread):
     channel = None
     def run(self):
         while True:
-          time_treshold = datetime.now() - timedelta(minutes=DEFAULT_MINUTE_THRESHOLD)
-          parking_zones = ParkingZone.objects.all()
           try:
+            parking_zones = ParkingZone.objects.all()
             for parking_zone in parking_zones:
               # print(parking_zone)
               publish_parkingslots_by_parkingzone(parking_zone)
@@ -146,7 +153,7 @@ class AMQP_Consumer_Thread(threading.Thread):
       elif json_data['action'] == 'parking_availability':
         # default value: available
         self.process_participation(json_data)
-        publish_participation_by_device_uuid(json_data['device_uuid'])
+        publish_participation_to_device_uuid(json_data['device_uuid'])
 
       elif json_data['action'] == 'participant_location':
         data_movement = ParticipantMovementLog(
@@ -163,7 +170,8 @@ class AMQP_Consumer_Thread(threading.Thread):
           subscriber_type=json_data['device_type']
         )
 
-      publish_participation_by_device_uuid(json_data['device_uuid'])
+      publish_participation_to_device_uuid(json_data['device_uuid'])
+      publish_all_parkingzones_and_geopoints_to_device_uuid(json_data['device_uuid'])
 
     def process_participation(self, json_data):
         
@@ -208,30 +216,41 @@ publish_time_thread.daemon = True
 publish_time_thread.start()      
 
 
-publish_parking_zone_thread = AMQP_Publish_Parking_zone_thread()
-publish_parking_zone_thread.channel = channel_send
-publish_parking_zone_thread.daemon = True
-publish_parking_zone_thread.start()      
-
+publish_parking_slots_thread = AMQP_Publish_Parking_Slots_thread()
+publish_parking_slots_thread.channel = channel_send
+publish_parking_slots_thread.daemon = True
+publish_parking_slots_thread.start()      
 
 majority_thread = MAJORITY_Thread()
 majority_thread.daemon = True
 majority_thread.start()
 
+
+# credit_calculation_thread = CREDIT_Calculation_Thread()
+# credit_calculation.daemon = True
+# credit_calculation.start()
+
 @background(queue="submit_background_job")
 def submit_background_job():
     current_time = datetime.now()
 
-def publish_participation_by_device_uuid(device_uuid):
+def publish_participation_to_device_uuid(device_uuid):
     time_treshold = datetime.now() - timedelta(minutes=DEFAULT_MINUTE_THRESHOLD)
     participant_credits = ParticipantCredit.objects.filter(ts_update__gt=time_treshold, participant_uuid=device_uuid).all()
     topic = "participant." + device_uuid
     payload_type = "participant_credits"
     send_participant_credits_to_topic(topic, participant_credits, payload_type)
 
+
+def publish_all_parkingzones_and_geopoints_to_device_uuid(device_uuid):
+    parking_zones = ParkingZone.objects.all()
+    topic = "participant." + device_uuid
+    payload_type = "parking_zones"
+    send_parkingzones_to_topic(topic, parking_zones, payload_type)
+
 def publish_parkingslots_by_parkingzone(parking_zone):
     parking_slots = ParkingSlot.objects.filter(zone=parking_zone).all()
-    topic = "zone." + str(parking_zone.id)
+    topic = "parking_slot.zone." + str(parking_zone.id)
     payload_type = "parking_slots"
     send_parking_slots_to_topic(topic, parking_slots, payload_type)
 
@@ -262,6 +281,31 @@ def send_participant_credits_to_topic(amqp_topic, participant_credits, payload_t
     send_to_topic(amqp_topic, message, payload_type)
     # print(message)
 
+def send_parkingzones_to_topic(amqp_topic, parking_zones, payload_type):
+
+    list_msg = []    
+    for zone in parking_zones:
+        parkingzone_geopoints = ParkingZonePolygonGeoPoint.objects.filter(parking_zone=zone).values('id', 'longitude', 'latitude')
+        list_geopoints = list(parkingzone_geopoints)
+        tmp = {
+          'id': zone.id,
+          'name': zone.name,
+          'description': zone.description,
+          'center_longitude': zone.center_longitude,
+          'center_latitude': zone.center_latitude,
+          'allowed_minimum_credit': zone.allowed_minimum_credit,
+          'geopoints': list_geopoints
+        }
+        list_msg.append(tmp)
+
+    send_data = {
+      'type': payload_type,
+      'payload': list_msg
+    }
+
+    print(send_data)
+    message = json.dumps(send_data, cls=DjangoJSONEncoder)
+    send_to_topic(amqp_topic, message, payload_type)
 
 def send_parking_slots_to_topic(amqp_topic, parking_slots, payload_type):
     list_msg = []

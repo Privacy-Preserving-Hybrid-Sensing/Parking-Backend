@@ -7,7 +7,7 @@ class ParkingZone(models.Model):
   description = models.CharField(max_length=1000, default="")
   center_longitude = models.CharField(max_length=100, default="0.0")
   center_latitude = models.CharField(max_length=100, default="0.0")
-
+  allowed_minimum_credit = models.IntegerField(default=100)
 
   # Status Codes for ParkingSlot
   # case -3: MARKER_PARKING_UNAVAILABLE_CONFIRMED;
@@ -71,6 +71,11 @@ class ParkingSlot(models.Model):
         status = 0,
       )
       parking_changes.save()
+
+class ParkingZonePolygonGeoPoint(models.Model):
+  parking_zone = models.ForeignKey(ParkingZone, on_delete=models.CASCADE, blank=True, null=True)
+  longitude = models.CharField(max_length=100)
+  latitude = models.CharField(max_length=100)
 
 class ParkingSlotChanges(models.Model):
   parking_slot = models.ForeignKey(ParkingSlot, on_delete=models.CASCADE, blank=True, null=True)
