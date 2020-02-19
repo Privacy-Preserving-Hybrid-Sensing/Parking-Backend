@@ -3,7 +3,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from logging import getLogger
 import pika
 import json
-from sparkee_common.models import ParkingAvailabilityLog, ParticipantMovementLog, ParkingSlot, ParkingAvailabilitySubscription, ParkingZone, ParticipantCredit, DataParticipationParkingAvailability, ParkingZonePolygonGeoPoint
+from database.models import ParkingAvailabilityLog, ParticipantMovementLog, ParkingSpot, Subscription, ParkingZone, ParticipantCredit, Participation, ParkingZonePolygonGeoPoint
 from datetime import datetime, timedelta, date
 from django.conf import settings
 import threading
@@ -12,7 +12,8 @@ import environ
 import time
 from django.db.models.functions import Cast
 from django.db.models import TextField
-import AMQPPublisher
+from .amqppublisher import AMQPPublisher
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -41,17 +42,17 @@ channel_recv.queue_bind(exchange="amq.topic", routing_key=DEFAULT_PARTICIPANT_TO
 amqp_url = 'amqp://'+ env('RABBITUSER') +':'+ env('RABBITUSER') +'@'+ env('RABBITHOST') +':'+ env('RABBITPORT') +'/%2F?connection_attempts=30&heartbeat=3600'
 publisher = AMQPPublisher(amqp_url)
 
-class CREDIT_Calculation_Thread(threading.Thread):
-    def run(self):
-        while True:
-          self.calculate_parking_log()
-          time.sleep(30)
+# class CREDIT_Calculation_Thread(threading.Thread):
+#     def run(self):
+#         while True:
+#           self.calculate_parking_log()
+#           time.sleep(30)
 
 class MAJORITY_Thread(threading.Thread):
 
     def calculate_parking_log(self):
         time_treshold = datetime.now() - timedelta(minutes=DEFAULT_MINUTE_THRESHOLD)
-        parking_changed_logs = DataParticipationParkingAvailability.objects.filter(ts_update__gt=time_treshold).all()
+        parking_changed_logs = Participation.objects.filter(ts_update__gt=time_treshold).all()
         data = {}
 
         # TODO: Get the data using Postgres/Django models Query
@@ -92,7 +93,7 @@ class MAJORITY_Thread(threading.Thread):
             parking_status = -2
           else:
             parking_status = -1
-        ParkingSlot.change(data['longitude'], data['latitude'], data['available'], data['unavailable'], parking_status, confidence_level)
+        ParkingSpot.change(data['longitude'], data['latitude'], data['available'], data['unavailable'], parking_status, confidence_level)
 
 
         # calculate_majority_last_five_minutes()
@@ -101,6 +102,7 @@ class MAJORITY_Thread(threading.Thread):
 
     def run(self):
         while True:
+          print(message = datetime.now().strftime("%Y-%m-%d %H:%i:%s"))
           self.calculate_parking_log()
           time.sleep(30)
           # Check every 30 seconds interval to get majority score
@@ -125,7 +127,7 @@ class AMQP_Publish_Parking_Slots_thread(threading.Thread):
             parking_zones = ParkingZone.objects.all()
             for parking_zone in parking_zones:
               # print(parking_zone)
-              publish_parkingslots_by_parkingzone(parking_zone)
+              publish_ParkingSpots_by_parkingzone(parking_zone)
 
           except:
             print("Some Publish Error, skip this Parking Zone loop process")
@@ -143,7 +145,7 @@ class AMQP_Consumer_Thread(threading.Thread):
       if json_data['action'] == 'parking_slot_registration':
         # TODO: This is just for Admin only
         zone = ParkingZone.objects.filter(name='All Zones').first()
-        ParkingSlot.create(
+        ParkingSpot.create(
           registrar_uuid = json_data['device_uuid'],
           longitude = json_data['lon'],
           latitude = json_data['lat'],
@@ -153,7 +155,7 @@ class AMQP_Consumer_Thread(threading.Thread):
       elif json_data['action'] == 'parking_availability':
         # default value: available
         self.process_participation(json_data)
-        publish_participation_to_device_uuid(json_data['device_uuid'])
+        # publish_participation_to_device_uuid(json_data['device_uuid'])
 
       elif json_data['action'] == 'participant_location':
         data_movement = ParticipantMovementLog(
@@ -163,15 +165,15 @@ class AMQP_Consumer_Thread(threading.Thread):
         )
         data_movement.save()
         
-        ParkingAvailabilitySubscription.subscribe(
+        Subscription.subscribe(
           longitude=json_data['lon'], 
           latitude=json_data['lat'], 
           subscriber_uuid=json_data['device_uuid'],
           subscriber_type=json_data['device_type']
         )
-
-      publish_participation_to_device_uuid(json_data['device_uuid'])
-      publish_all_parkingzones_and_geopoints_to_device_uuid(json_data['device_uuid'])
+        print(data_movement)
+      # publish_participation_to_device_uuid(json_data['device_uuid'])
+      # publish_all_parkingzones_and_geopoints_to_device_uuid(json_data['device_uuid'])
 
     def process_participation(self, json_data):
         
@@ -188,7 +190,7 @@ class AMQP_Consumer_Thread(threading.Thread):
         )
         new_data.save()
 
-        participation_status, current_time = DataParticipationParkingAvailability.participate(
+        participation_status, current_time = Participation.participate(
           json_data['lon'], 
           json_data['lat'], 
           json_data['device_uuid'], 
@@ -203,23 +205,23 @@ class AMQP_Consumer_Thread(threading.Thread):
         self.channel.start_consuming()
 
 
-consumer_thread = AMQP_Consumer_Thread()
-consumer_thread.channel = channel_recv
-consumer_thread.queue_name = queue_name_recv
-consumer_thread.daemon = True
-consumer_thread.start()      
+# consumer_thread = AMQP_Consumer_Thread()
+# consumer_thread.channel = channel_recv
+# consumer_thread.queue_name = queue_name_recv
+# consumer_thread.daemon = True
+# consumer_thread.start()      
 
 
-publish_time_thread = AMQP_Publish_Time_Thread()
-publish_time_thread.channel = channel_send
-publish_time_thread.daemon = True
-publish_time_thread.start()      
+# publish_time_thread = AMQP_Publish_Time_Thread()
+# publish_time_thread.channel = channel_send
+# publish_time_thread.daemon = True
+# publish_time_thread.start()      
 
 
-publish_parking_slots_thread = AMQP_Publish_Parking_Slots_thread()
-publish_parking_slots_thread.channel = channel_send
-publish_parking_slots_thread.daemon = True
-publish_parking_slots_thread.start()      
+# publish_parking_slots_thread = AMQP_Publish_Parking_Slots_thread()
+# publish_parking_slots_thread.channel = channel_send
+# publish_parking_slots_thread.daemon = True
+# publish_parking_slots_thread.start()      
 
 majority_thread = MAJORITY_Thread()
 majority_thread.daemon = True
@@ -230,9 +232,9 @@ majority_thread.start()
 # credit_calculation.daemon = True
 # credit_calculation.start()
 
-@background(queue="submit_background_job")
-def submit_background_job():
-    current_time = datetime.now()
+# @background(queue="submit_background_job")
+# def submit_background_job():
+#     current_time = datetime.now()
 
 def publish_participation_to_device_uuid(device_uuid):
     time_treshold = datetime.now() - timedelta(minutes=DEFAULT_MINUTE_THRESHOLD)
@@ -248,8 +250,8 @@ def publish_all_parkingzones_and_geopoints_to_device_uuid(device_uuid):
     payload_type = "parking_zones"
     send_parkingzones_to_topic(topic, parking_zones, payload_type)
 
-def publish_parkingslots_by_parkingzone(parking_zone):
-    parking_slots = ParkingSlot.objects.filter(zone=parking_zone).all()
+def publish_ParkingSpots_by_parkingzone(parking_zone):
+    parking_slots = ParkingSpot.objects.filter(zone=parking_zone).all()
     topic = "parking_slot.zone." + str(parking_zone.id)
     payload_type = "parking_slots"
     send_parking_slots_to_topic(topic, parking_slots, payload_type)

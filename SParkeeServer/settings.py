@@ -44,12 +44,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'background_task',
+    'import_export',
     'kronos',
-    'sparkee_api',
-    'sparkee_backend',
-    'sparkee_common',
-    'sparkee_web',
+    'backend',
+    'api',
+    'web',
 ]
+
+IMPORT_EXPORT_USE_TRANSACTIONS = True
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -169,17 +171,17 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
-        'background_task': {
+        'backend': {
             'handlers': ['debug_file'],
             'level': 'DEBUG',
             'propagate': True,
         },
-        'sparkee_api': {
+        'api': {
             'handlers': ['debug_file'],
             'level': 'DEBUG',
             'propagate': True,
         },
-        'sparkee_web': {
+        'web': {
             'handlers': ['debug_file'],
             'level': 'DEBUG',
             'propagate': True,
