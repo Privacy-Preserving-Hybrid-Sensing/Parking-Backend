@@ -170,7 +170,7 @@ def generate_dict_response_ok(request, msg, data):
 
 @csrf_exempt
 @required_field  
-def profile_credit(request):
+def profile_creditbalance(request):
     subscriber_uuid = request.POST['subscriber_uuid']
     # Assumption: for 1 subscriber, there's only 1 zone subscription for 1 day
     total_credit = get_remain_credit(subscriber_uuid)
@@ -220,3 +220,14 @@ def participate_parking_spot(request, status, parking_spot_id):
 
     msg = "Participation OK"
     return generate_dict_response_ok(request, msg, [])
+
+@csrf_exempt
+@required_field  
+def profile_participation(request):
+    subscriber_uuid = request.POST['subscriber_uuid']
+    # Assumption: for 1 subscriber, there's only 1 zone subscription for 1 day
+    total_credit = get_remain_credit(subscriber_uuid)
+    tmp = { 'credit_value' : total_credit, 'subscriber_uuid':  subscriber_uuid}
+
+    msg = "Profile Credit OK"
+    return generate_dict_response_ok(request, msg, [tmp])

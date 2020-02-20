@@ -20,6 +20,7 @@ class ParkingZone(models.Model):
   # case 3: MARKER_PARKING_AVAILABLE_CONFIRMED;
 
 class ParkingSpot(models.Model):
+  name = models.CharField(max_length=100, db_index=True, default="")
   ts_register = models.DateTimeField(default=now)
   ts_update = models.DateTimeField(default=now)
   registrar_uuid = models.CharField(max_length=100)

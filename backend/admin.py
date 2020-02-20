@@ -25,7 +25,7 @@ class ParkingSpotResource(resources.ModelResource):
     model = ParkingSpot
 class ParkingSpotAdmin(ImportExportModelAdmin):
   resource_class = ParkingSpotResource
-  list_display = ['ts_register', 'ts_update','registrar_uuid','longitude','latitude','voting_available','voting_unavailable','confidence_level','status','zone']
+  list_display = ['name', 'ts_register', 'ts_update','registrar_uuid','longitude','latitude','voting_available','voting_unavailable','confidence_level','status','zone']
 
 class SubscriptionResource(resources.ModelResource):
   class Meta:
