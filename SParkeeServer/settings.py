@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 
 import os
 import environ
-
+import sys
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -153,16 +153,20 @@ LOGGING = {
     },
     'handlers': {
         'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': 'logs/request.log',
-            'formatter': 'verbose',
+            'level': 'WARNING',
+            # 'class': 'logging.FileHandler',
+            'class': 'logging.StreamHandler',
+            'stream': sys.stdout,            
+            # 'filename': 'logs/request.log',
+            'formatter': 'verbose'
         },
         'debug_file': {
             'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': 'logs/debug.log',
-            'formatter': 'verbose',
+            'class': 'logging.StreamHandler',
+            'stream': sys.stdout,            
+            # 'class': 'logging.FileHandler',
+            # 'filename': 'logs/debug.log',
+            'formatter': 'verbose'
         },
     },
     'loggers': {
