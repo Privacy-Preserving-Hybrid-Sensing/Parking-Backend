@@ -5,7 +5,15 @@
 SmartParking is an open information sharing of CrowdSourced platform for incentivize Parking Spot.
 SmartParking Backend provides web access, data API and repository for Mobile and Web Based app. For Android based App, please visit [Smart Parking App](https://gitlab.anu.edu.au/u1063268/smart-parking-app) project.
 
-This docs describe how to use the SmartParking API. We hope you enjoy these docs, and please don't hesitate to [file an issue](https://gitlab.anu.edu.au/u1063268/smart-parking-backend/issues) if you see anything missing.
+
+This docs describe  SmartParking Backend modules:
+
+- [Smart Parking API](#API)
+- [Smart Parking Web Application](#Web Application)
+- [Smart Parking Background](#Background)
+
+# API
+This docs describe how to use the SmartParking API. We hope you enjoy these docs, and please don't hesitate to [file an issue](https://gitlab.anu.edu.au/u1063268/smart-parking-backend/issues/new) if you see anything missing.
 
 ## Subscriber UUID
 
@@ -50,3 +58,8 @@ The `data` attribute contains multi dimentional array associated with the reques
 
 Smart Parking Backend response always return HTTP 200 to prevent browser from closing HTTP 1.1 established protocol.
 For other HTTP code response, means as is.
+
+
+# Web Application
+
+BLA ALBLABLABLA
