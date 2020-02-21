@@ -1,8 +1,9 @@
 # Introduction
 
-Smart Parking Backend is a data repository of CrowdSourced platform for incentivize Parking Spot information sharing.
+SmartParking is an open information sharing of CrowdSourced platform for incentivize Parking Spot.
+SmartParking Backend provides web access, data API and repository for Mobile and Web Based app. For Android based App, please visit [Smart Parking App](https://gitlab.anu.edu.au/u1063268/smart-parking-app) project.
 
-These docs describe how to use the SmartParking API. We hope you enjoy these docs, and please don't hesitate to [file an issue](https://gitlab.anu.edu.au/u1063268/smart-parking-backend/issues) if you see anything missing.
+This docs describe how to use the SmartParking API. We hope you enjoy these docs, and please don't hesitate to [file an issue](https://gitlab.anu.edu.au/u1063268/smart-parking-backend/issues) if you see anything missing.
 
 ## Subscriber UUID
 
