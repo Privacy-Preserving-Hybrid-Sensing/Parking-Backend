@@ -61,11 +61,15 @@ For other HTTP code response, means as is.
 | No | URL | Description |
 |:---|:---|:---|
 | 1 | [GET /api/zones/all](#get-apizonesall)| Getting all Parking zone and it's status, number of parking spots, geopoints, etc |
-| 2 | [GET /api/zones/*int:id*](#get-apizonesintid) | Getting specific Parking zone and it's status, number of parking spots, geopoints, etc|
-| 3 | [GET /api/zones/search/*string:keyword*](#get-apizonessearchstringkeyword) | Search Parking zone by keyword for it's status, number of parking spots, geopoints, etc|
-| 4 | [GET /api/zones/*int:zone_id*/spots/all](#get-apizonesintzone_idspotsall)| Getting all parking spots based on Parking Zone ID. |
-| 5 | [GET /api/zones/*int:zone_id*/spots/*int:parking_spot_id*](#get-apizonesintzone_idspotsintparking_spot_id)| Getting specific parking spots based on Parking Zone ID. |
-| 6 | [GET /api/zones/*int:zone_id*/subscribe](#get-apizonesintzone_idsubscribe)| Subscribe specific parking zone. |
+| 2 | [GET /api/zones/*id*](#get-apizonesintid) | Getting specific Parking zone and it's status, number of parking spots, geopoints, etc|
+| 3 | [GET /api/zones/search/*keyword*](#get-apizonessearchstringkeyword) | Search Parking zone by keyword for it's status, number of parking spots, geopoints, etc|
+| 4 | [GET /api/zones/*zone_id*/spots/all](#get-apizonesintzone_idspotsall)| Getting all parking spots based on Parking Zone ID. |
+| 5 | [GET /api/zones/*zone_id*/spots/*spot_id*](#get-apizonesintzone_idspotsintspot_id)| Getting specific parking spots based on Parking Zone ID. |
+| 6 | [GET /api/zones/*zone_id*/subscribe](#get-apizonesintzone_idsubscribe)| Subscribe specific parking zone. |
+| 7 | [GET /api/profile/creditbalance](#get-apiprofilecreditbalance) | Get credit participation balance |
+| 8 | [GET /api/profile/participation/*days_ago*](get-apiprofileparticipationintdays_ago) | Get participation history |
+| 9 | [POST /api/participate/*status*/*spot_id*](post-apiparticipatestatusspot_id) | Participate crowd source parking spot information |
+
 
 #### `GET /api/zones/all`
 response:
@@ -155,7 +159,7 @@ Response:
 }]
 ```
 
-#### `GET /api/zones/<int:zone_id>/spots/<int:parking_spot_id>`
+#### `GET /api/zones/<int:zone_id>/spots/<int:spot_id>`
 Response:
 ```javascript
 { 
@@ -186,6 +190,41 @@ Data response:
 }
 ```
 
+#### `GET /api/profile/creditbalance`
+Data response:
+```javascript
+{
+  "credit_incentive": int,
+  "credit_charged": int,
+  "credit_balance": int
+}
+```
+
+#### `GET /api/profile/participation/<int:days_ago>`
+Data response:
+```javascript
+[{
+  "id": int,
+  "ts": int,
+  "zone_id": int,
+  "spot_id": int,
+  "value": int,
+  "credit_incentive": int
+}]
+```
+
+#### `POST /api/participate/<int:zone_id>/<int:spot_id>/<string:status>`
+Data response:
+```javascript
+{
+  "id": int,
+  "ts": int,
+  "zone_id": int,
+  "spot_id": int,
+  "value": int,
+  "credit_incentive": int
+}
+```
 
 ## Web Application
 
