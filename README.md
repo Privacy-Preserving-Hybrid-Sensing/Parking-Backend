@@ -8,9 +8,9 @@ SmartParking Backend provides web access, data API and repository for Mobile and
 
 This docs describe  SmartParking Backend modules:
 
-- [Smart Parking API](#API)
-- [Smart Parking Web Application](#Web Application)
-- [Smart Parking Background](#Background)
+- [Smart Parking API](#api)
+- [Smart Parking Web Application](#web-application)
+- [Smart Parking Background](#background)
 
 # API
 This docs describe how to use the SmartParking API. We hope you enjoy these docs, and please don't hesitate to [file an issue](https://gitlab.anu.edu.au/u1063268/smart-parking-backend/issues/new) if you see anything missing.
