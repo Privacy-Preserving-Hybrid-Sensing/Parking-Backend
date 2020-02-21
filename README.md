@@ -67,8 +67,8 @@ For other HTTP code response, means as is.
 | 5 | [GET /api/zones/*zone_id*/spots/*spot_id*](#get-apizonesintzone_idspotsintspot_id)| Getting specific parking spots based on Parking Zone ID. |
 | 6 | [GET /api/zones/*zone_id*/subscribe](#get-apizonesintzone_idsubscribe)| Subscribe specific parking zone. |
 | 7 | [GET /api/profile/creditbalance](#get-apiprofilecreditbalance) | Get credit participation balance |
-| 8 | [GET /api/profile/participation/*days_ago*](get-apiprofileparticipationintdays_ago) | Get participation history |
-| 9 | [POST /api/participate/*status*/*spot_id*](post-apiparticipatestatusspot_id) | Participate crowd source parking spot information |
+| 8 | [GET /api/profile/participation/*days_ago*](#get-apiprofileparticipationintdays_ago) | Get participation history |
+| 9 | [POST /api/participate/*status*/*spot_id*](#post-apiparticipateintzone_idintspot_idstringstatus) | Participate crowd source parking spot information |
 
 
 #### `GET /api/zones/all`
@@ -179,7 +179,7 @@ Response:
 ```
 
 #### `GET /api/zones/<int:zone_id>/subscribe`
-Data response:
+Response:
 ```javascript
 {
   "id": int,
@@ -191,7 +191,7 @@ Data response:
 ```
 
 #### `GET /api/profile/creditbalance`
-Data response:
+Response:
 ```javascript
 {
   "credit_incentive": int,
@@ -201,7 +201,7 @@ Data response:
 ```
 
 #### `GET /api/profile/participation/<int:days_ago>`
-Data response:
+Response:
 ```javascript
 [{
   "id": int,
@@ -214,7 +214,7 @@ Data response:
 ```
 
 #### `POST /api/participate/<int:zone_id>/<int:spot_id>/<string:status>`
-Data response:
+Response:
 ```javascript
 {
   "id": int,
