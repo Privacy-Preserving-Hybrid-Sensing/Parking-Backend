@@ -62,10 +62,10 @@ For other HTTP code response, means as is.
 |:---|:---|:---|
 | 1 | [GET /api/zones/all](#get-apizonesall)| Getting all Parking zone and it's status, number of parking spots, geopoints, etc |
 | 2 | [GET /api/zones/*int:id*](#get-apizonesintid) | Getting specific Parking zone and it's status, number of parking spots, geopoints, etc|
-| 3 | | Search Parking zone by keyword for it's status, number of parking spots, geopoints, etc|
-| 4 | | Getting all parking spots based on Parking Zone ID. |
-| 5 | | Getting specific parking spots based on Parking Zone ID. |
-| 6 | | Subscribe specific parking zone. |
+| 3 | [GET /api/zones/search/*string:keyword*](#get-apizonessearchstringkeyword) | Search Parking zone by keyword for it's status, number of parking spots, geopoints, etc|
+| 4 | [GET /api/zones/*int:zone_id*/spots/all](#get-apizonesintzone_idspotsall)| Getting all parking spots based on Parking Zone ID. |
+| 5 | [GET /api/zones/*int:zone_id*/spots/*int:parking_spot_id*](#get-apizonesintzone_idspotsintparking_spot_id)| Getting specific parking spots based on Parking Zone ID. |
+| 6 | [GET /api/zones/*int:zone_id*/subscribe](#get-apizonesintzone_idsubscribe)| Subscribe specific parking zone. |
 
 #### `GET /api/zones/all`
 response:
