@@ -1,5 +1,7 @@
 # Introduction
 
+![Smart Parking Platform](https://gitlab.anu.edu.au/u1063268/smart-parking-backend/raw/master/docs/platform.png "Smart Parking Platform")
+
 SmartParking is an open information sharing of CrowdSourced platform for incentivize Parking Spot.
 SmartParking Backend provides web access, data API and repository for Mobile and Web Based app. For Android based App, please visit [Smart Parking App](https://gitlab.anu.edu.au/u1063268/smart-parking-app) project.
 
