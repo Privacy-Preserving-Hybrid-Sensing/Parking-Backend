@@ -60,9 +60,33 @@ For other HTTP code response, means as is.
 
 ### API Lists
 
+#### `GET /api/zones/info/all`
+Getting available Parking zone and it's status, number of parking spots, geopoints, etc
+Data response:
+```javascript
+[{  "id": int,
+    "authorized": boolean,
+    "name": string,
+    "description": string,
+    "center_longitude": string,
+    "center_latitude": string,
+    "credit_charge": int,
+    "num_available": int,
+    "num_unavailable": int,
+    "num_undefined": int,
+    "ts_update": datetiem,
+    "geopoints": [{ "id": int,
+                    "longitude": string,
+                    "latitude": string
+    }]
+}]
+```
+
+
+
 | URL Pattern | Method | Description | Example response at field "data" |
 | :--- | :--- | :--- | :--- |
-| `/api/zones/info/all` | `GET` | Getting available Parking zone and it's status, number of parking spots, geopoints, etc | `[{"id": 1, "authorized": true, "name": "Research School of Chemistry 1", "description": "Research School of Chemistry", "center_longitude": "149.119111", "center_latitude": "-35.276524", "credit_charge": 0, "ts_update": "2020-02-10T11:14:59", "geopoints": [{"id": 1, "longitude": "149.118958", "latitude": "-35.276534"}, {"id": 2, "longitude": "149.119", "latitude": "-35.276431"}, {"id": 3, "longitude": "149.119074", "latitude": "-35.276411"}, {"id": 4, "longitude": "149.119304", "latitude": "-35.276537"}}, {"id": 3, "authorized": false, "name": "CSIT Parking Zone", "description": "CSIT Parking Zone", "center_longitude": "149.120768", "center_latitude": "-35.275272", "credit_charge": 3, "ts_update": "2020-02-15T19:14:52", "geopoints": [{"id": 8, "longitude": "149.120677", "latitude": "-35.275184"}, {"id": 9, "longitude": "149.120748", "latitude": "-35.275052"}, {"id": 10, "longitude": "149.120898", "latitude": "-35.275101"}, {"id": 11, "longitude": "149.120956", "latitude": "-35.275464"}]}]` |
+| `/api/zones/info/all` | `GET` | Getting available Parking zone and it's status, number of parking spots, geopoints, etc | `` |
 
 ## Web Application
 
