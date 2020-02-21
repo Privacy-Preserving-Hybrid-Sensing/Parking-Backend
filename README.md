@@ -18,6 +18,7 @@ POST /zones/subscribe/2
 ```
 
 For POST method, use 
+
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
 | `subscriber_uuid` | `string` | **Required**. Your Subscriber UUID |
