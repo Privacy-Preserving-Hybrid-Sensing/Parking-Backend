@@ -218,11 +218,9 @@ Response:
 ```javascript
 {
   "id": int,
-  "ts": int,
-  "zone_id": int,
-  "spot_id": int,
-  "value": int,
-  "credit_incentive": int
+  "ts": datetime,
+  "subscriber_uuid": string,
+  "email": string
 }
 ```
 
