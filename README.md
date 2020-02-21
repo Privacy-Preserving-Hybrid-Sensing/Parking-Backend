@@ -58,9 +58,17 @@ For other HTTP code response, means as is.
 
 ### API Lists
 
+| No | URL | Description |
+|:---|:---|:---|
+| 1 | [GET /api/zones/all](#get-apizonesall)| Getting all Parking zone and it's status, number of parking spots, geopoints, etc |
+| 2 | | Getting specific Parking zone and it's status, number of parking spots, geopoints, etc|
+| 3 | | Search Parking zone by keyword for it's status, number of parking spots, geopoints, etc|
+| 4 | | Getting all parking spots based on Parking Zone ID. |
+| 5 | | Getting specific parking spots based on Parking Zone ID. |
+| 6 | | Subscribe specific parking zone. |
+
 #### `GET /api/zones/all`
-Getting all Parking zone and it's status, number of parking spots, geopoints, etc
-Data response:
+response:
 ```javascript
 [{  
   "id": int,
@@ -83,8 +91,7 @@ Data response:
 ```
 
 #### `GET /api/zones/<int:id>`
-Getting specific Parking zone and it's status, number of parking spots, geopoints, etc
-Data response:
+Response:
 ```javascript
 {  
   "id": int,
@@ -107,8 +114,7 @@ Data response:
 ```
 
 #### `GET /api/zones/search/<string:keyword>`
-Search Parking zone by keyword for it's status, number of parking spots, geopoints, etc
-Data response:
+Response:
 ```javascript
 [{  
   "id": int,
@@ -131,8 +137,7 @@ Data response:
 ```
 
 #### `GET /api/zones/<int:zone_id>/spots/all`
-Getting all parking spots based on Parking Zone ID. 
-Data response:
+Response:
 ```javascript
 [{ 
   "id": int, 
@@ -151,8 +156,7 @@ Data response:
 ```
 
 #### `GET /api/zones/<int:zone_id>/spots/<int:parking_spot_id>`
-Getting specific parking spots based on Parking Zone ID. 
-Data response:
+Response:
 ```javascript
 { 
   "id": int, 
@@ -171,8 +175,6 @@ Data response:
 ```
 
 #### `GET /api/zones/<int:zone_id>/subscribe`
-Subscribe specific parking zone.
-
 Data response:
 ```javascript
 {
