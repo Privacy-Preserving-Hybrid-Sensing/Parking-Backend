@@ -19,19 +19,17 @@ This docs describe how to use the SmartParking API. We hope you enjoy these docs
 
 All POST method API requests require the use of a subscriber_uuid. It's not a username/password thing, just an anonymous identification that represent yourself in this system. Another method of privacy presenving mechanism is on other research.
 
-To identify an API request, you should provide your Subscriber UUID key in the `subscriber_uuid` POST element. Example:
+To identify an API request, you should provide your Subscriber UUID key in the `subscriber_uuid` header element. 
+Example HTTP Header:
 
-
-```http
-GET /api/zones/info/all
-POST /api/zones/subscribe/2
 ```
-
-For POST method, use
-
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| `subscriber_uuid` | `string` | **Required**. Your Subscriber UUID |
+GET /api/zones/info/all HTTP/1.1
+Accept-Encoding: gzip,deflate
+Content-Type: application/json;charset=UTF-8
+Subscriber-UUID: 8f1ed884-54a5-11ea-a38b-2e728ce88125
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.1.1 (java 1.5)
+```
 
 ### Responses
 
@@ -39,11 +37,11 @@ Every API endpoints return the same JSON representation:
 
 ```javascript
 {
-  'status': string,
-  'trx_id': string,
-  'path': string,
-  'msg': string,
-  'data': []
+  "status": string,
+  "trx_id": string,
+  "path": string,
+  "msg": string,
+  "data": []
 }
 ```
 
@@ -60,33 +58,132 @@ For other HTTP code response, means as is.
 
 ### API Lists
 
-#### `GET /api/zones/info/all`
-Getting available Parking zone and it's status, number of parking spots, geopoints, etc
+#### `GET /api/zones/all`
+Getting all Parking zone and it's status, number of parking spots, geopoints, etc
 Data response:
 ```javascript
-[{  "id": int,
-    "authorized": boolean,
-    "name": string,
-    "description": string,
-    "center_longitude": string,
-    "center_latitude": string,
-    "credit_charge": int,
-    "num_available": int,
-    "num_unavailable": int,
-    "num_undefined": int,
-    "ts_update": datetiem,
-    "geopoints": [{ "id": int,
-                    "longitude": string,
-                    "latitude": string
-    }]
+[{  
+  "id": int,
+  "authorized": boolean,
+  "name": string,
+  "description": string,
+  "center_longitude": string,
+  "center_latitude": string,
+  "credit_charge": int,
+  "num_available": int,
+  "num_unavailable": int,
+  "num_undefined": int,
+  "ts_update": datetime,
+  "geopoints": [{ 
+      "id": int,
+      "longitude": string,
+      "latitude": string
+  }]
 }]
 ```
 
+#### `GET /api/zones/<int:id>`
+Getting specific Parking zone and it's status, number of parking spots, geopoints, etc
+Data response:
+```javascript
+{  
+  "id": int,
+  "authorized": boolean,
+  "name": string,
+  "description": string,
+  "center_longitude": string,
+  "center_latitude": string,
+  "credit_charge": int,
+  "num_available": int,
+  "num_unavailable": int,
+  "num_undefined": int,
+  "ts_update": datetime,
+  "geopoints": [{ 
+      "id": int,
+      "longitude": string,
+      "latitude": string
+  }]
+}
+```
 
+#### `GET /api/zones/search/<string:keyword>`
+Search Parking zone by keyword for it's status, number of parking spots, geopoints, etc
+Data response:
+```javascript
+[{  
+  "id": int,
+  "authorized": boolean,
+  "name": string,
+  "description": string,
+  "center_longitude": string,
+  "center_latitude": string,
+  "credit_charge": int,
+  "num_available": int,
+  "num_unavailable": int,
+  "num_undefined": int,
+  "ts_update": datetime,
+  "geopoints": [{ 
+      "id": int,
+      "longitude": string,
+      "latitude": string
+  }]
+}]
+```
 
-| URL Pattern | Method | Description | Example response at field "data" |
-| :--- | :--- | :--- | :--- |
-| `/api/zones/info/all` | `GET` | Getting available Parking zone and it's status, number of parking spots, geopoints, etc | `` |
+#### `GET /api/zones/<int:zone_id>/spots/all`
+Getting all parking spots based on Parking Zone ID. 
+Data response:
+```javascript
+[{ 
+  "id": int, 
+  "name": string, 
+  "ts_register": datetime,
+  "ts_update": datetime,
+  "registrar_uuid": string,
+  "longitude": string,
+  "latitude": string,
+  "voting_available": 0.0,
+  "voting_unavailable": 0.0,
+  "confidence_level": 0.0,
+  "status": 0,
+  "zone_id": 1
+}]
+```
+
+#### `GET /api/zones/<int:zone_id>/spots/<int:parking_spot_id>`
+Getting specific parking spots based on Parking Zone ID. 
+Data response:
+```javascript
+{ 
+  "id": int, 
+  "name": string, 
+  "ts_register": datetime,
+  "ts_update": datetime,
+  "registrar_uuid": string,
+  "longitude": string,
+  "latitude": string,
+  "voting_available": 0.0,
+  "voting_unavailable": 0.0,
+  "confidence_level": 0.0,
+  "status": 0,
+  "zone_id": 1
+}
+```
+
+#### `GET /api/zones/<int:zone_id>/subscribe`
+Subscribe specific parking zone.
+
+Data response:
+```javascript
+{
+  "id": int,
+  "ts": datetime,
+  "subscriber_uuid": string,
+  "zone": int,
+  "credit_charged": int
+}
+```
+
 
 ## Web Application
 
