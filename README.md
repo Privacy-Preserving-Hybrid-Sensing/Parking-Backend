@@ -68,7 +68,7 @@ For other HTTP code response, means as is.
 | 6 | [GET /api/zones/*zone_id*/subscribe](#get-apizonesintzone_idsubscribe)| Subscribe specific parking zone. |
 | 7 | [GET /api/profile/creditbalance](#get-apiprofilecreditbalance) | Get credit participation balance |
 | 8 | [GET /api/profile/participation/*days_ago*](#get-apiprofileparticipationintdays_ago) | Get participation history |
-| 9 | [POST /api/profile/register/*email*](#post-apiprofileregisteremail) | Bind email to user's subscriber UUID |
+| 9 | [POST /api/profile/register/*email*](#post-apiprofileregisterstringemail) | Bind email to user's subscriber UUID |
 | 10 | [POST /api/participate/*status*/*spot_id*](#post-apiparticipateintzone_idintspot_idstringstatus) | Participate crowd source parking spot information |
 
 #### `GET /api/zones/all`
