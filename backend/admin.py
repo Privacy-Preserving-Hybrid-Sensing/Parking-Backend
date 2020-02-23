@@ -39,7 +39,7 @@ class ParticipationResource(resources.ModelResource):
     model = Participation
 class ParticipationAdmin(ImportExportModelAdmin):
   resource_class = ParticipationResource
-  list_display = ['ts_update','participant_uuid', 'availability_value','incentive_processed','parking_spot', 'incentive_value']
+  list_display = ['ts_update','participant_uuid', 'participation_value', 'processed','parking_spot', 'incentive_value']
 
 admin.site.register(ParkingZone, ParkingZoneAdmin)
 admin.site.register(ParkingZonePolygonGeoPoint, ParkingZonePolygonGeoPointAdmin)

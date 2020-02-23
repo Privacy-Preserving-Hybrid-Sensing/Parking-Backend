@@ -102,31 +102,32 @@ class ParkingAvailabilityLog(models.Model):
   participant_uuid = models.CharField(max_length=100, db_index=True)
   longitude = models.CharField(max_length=100, default="0.0")
   latitude = models.CharField(max_length=100, default="0.0")
-  availability_value = models.FloatField(default=0)
+  participation_value = models.FloatField(default=0)
   parking_spot = models.ForeignKey(ParkingSpot, on_delete=models.CASCADE, blank=True, null=True)
 
 class Participation(models.Model):
+  ts_create = models.DateTimeField(default=now)
   ts_update = models.DateTimeField(default=now)
   participant_uuid = models.CharField(max_length=100, db_index=True)
-  availability_value = models.FloatField()
-  incentive_processed = models.BooleanField(default=False)
+  participation_value = models.FloatField()
+  processed = models.BooleanField(default=False)
   parking_spot = models.ForeignKey(ParkingSpot, on_delete=models.CASCADE, blank=True, null=True)
   incentive_value = models.IntegerField(default=0)
 
-  def participate(parking_spot, participant_uuid, availability_value, minute_treshold):
+  def participate(parking_spot, participant_uuid, participation_value, minute_treshold):
     time_treshold = datetime.now() - timedelta(minutes=minute_treshold)
     previous_participation_data_in_time_threshold = Participation.objects.filter(ts_update__gt=time_treshold, parking_spot=parking_spot, participant_uuid=participant_uuid).first()
 
     new_participation_status = False
     current_time = datetime.now()
     if previous_participation_data_in_time_threshold == None:
-      new_participation_data = Participation(participant_uuid=participant_uuid, availability_value=availability_value, parking_spot=parking_spot)
+      new_participation_data = Participation(participant_uuid=participant_uuid, participation_value=participation_value, parking_spot=parking_spot)
       new_participation_data.save()
       new_participation_status = True
     else:
       previous_participation_data_in_time_threshold.ts_update = current_time
-      previous_participation_data_in_time_threshold.availability_value = availability_value
-      previous_participation_data_in_time_threshold.incentive_processed = False
+      previous_participation_data_in_time_threshold.participation_value = participation_value
+      previous_participation_data_in_time_threshold.processed = False
       previous_participation_data_in_time_threshold.incentive_value = 0
       previous_participation_data_in_time_threshold.save()
 

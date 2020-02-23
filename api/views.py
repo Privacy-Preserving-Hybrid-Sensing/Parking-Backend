@@ -7,7 +7,7 @@ import json
 from django.core import serializers
 from django.forms.models import model_to_dict
 from django.views.decorators.csrf import csrf_exempt
-from datetime import datetime, date
+from datetime import datetime, timedelta, date
 from .decorators import required_field
 
 DEFAULT_MINUTE_THRESHOLD = 1
@@ -250,13 +250,24 @@ def generate_dict_response_ok(request, msg, data):
 @csrf_exempt
 @required_field  
 def profile_creditbalance(request):
-    subscriber_uuid = request.POST['subscriber_uuid']
+    subscriber_uuid = request.headers['Subscriber-Uuid']
     # Assumption: for 1 subscriber, there's only 1 zone subscription for 1 day
-    total_credit = get_remain_credit(subscriber_uuid)
-    tmp = { 'incentive' : total_credit, 'subscriber_uuid':  subscriber_uuid}
+    incentive = 0
+    charged = 0
+
+    data_participation = Participation.objects.filter(participant_uuid=subscriber_uuid, incentive_processed=True).aggregate(Sum('incentive_value'))
+    if data_participation['incentive_value__sum'] is not None:
+      incentive += data_participation['incentive_value__sum']
+
+    data_charged = Subscription.objects.filter(subscriber_uuid=subscriber_uuid).aggregate(Sum('charged'))
+    if data_charged['charged__sum'] is not None:
+      charged += data_charged['charged__sum']
+    
+    balance = incentive - charged
+    tmp = { 'balance' : balance, 'incentive': incentive, 'charged': charged}
 
     msg = "Profile Credit OK"
-    return generate_dict_response_ok(request, msg, [tmp])
+    return generate_dict_response_ok(request, msg, tmp)
 
 
 def get_remain_credit(subscriber_uuid):
@@ -273,7 +284,7 @@ def get_remain_credit(subscriber_uuid):
 @csrf_exempt
 @required_field  
 def participate_zone_spot_status(request, status, parking_spot_id):
-    subscriber_uuid = request.POST['subscriber_uuid']
+    subscriber_uuid = request.headers['Subscriber-Uuid']
 
     value_participation = 1
 
@@ -285,7 +296,7 @@ def participate_zone_spot_status(request, status, parking_spot_id):
       participant_uuid = subscriber_uuid,
       longitude = parking_spot.longitude,
       latitude = parking_spot.latitude,
-      availability_value = value_participation,
+      participation_value = value_participation,
       parking_spot=parking_spot
     )
     new_data.save()
@@ -302,14 +313,28 @@ def participate_zone_spot_status(request, status, parking_spot_id):
 
 @csrf_exempt
 @required_field  
-def profile_participation_days_ago(request, days_ago):
-    subscriber_uuid = request.POST['subscriber_uuid']
+def profile_participations_days_ago(request, days_ago):
+    subscriber_uuid = request.headers['Subscriber-Uuid']
     # Assumption: for 1 subscriber, there's only 1 zone subscription for 1 day
-    total_credit = get_remain_credit(subscriber_uuid)
-    tmp = { 'incentive' : total_credit, 'subscriber_uuid':  subscriber_uuid}
+    time_treshold = datetime.now() - timedelta(days=days_ago)
 
-    msg = "Profile Credit OK"
-    return generate_dict_response_ok(request, msg, [tmp])
+    participant_datas = Participation.objects.filter(participant_uuid=subscriber_uuid, ts_create__gt=time_treshold).order_by('ts_create').all()
+    ret = []
+    for data in participant_datas:
+      tmp = {
+        'id': data.id,
+        'ts_create': data.ts_create,
+        'ts_update': data.ts_update,
+        'zone_id': data.parking_spot.zone.id,
+        'spot_id': data.parking_spot.id,
+        'participation_value': data.participation_value,
+        'incentive_value': data.incentive_value,
+        'processed': data.processed
+      }
+      ret.append(tmp)
+
+    msg = "Participation from " + str(days_ago) + " days ago"
+    return generate_dict_response_ok(request, msg, ret)
 
 @csrf_exempt
 @required_field  

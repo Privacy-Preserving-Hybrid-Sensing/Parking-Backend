@@ -68,8 +68,8 @@ For other HTTP code response, means as is.
 | 6 | [GET /api/zones/*zone_id*/subscribe](#get-apizonesintzone_idsubscribe)| Subscribe specific parking zone. |
 | 7 | [GET /api/profile/creditbalance](#get-apiprofilecreditbalance) | Get credit participation balance |
 | 8 | [GET /api/profile/participation/*days_ago*](#get-apiprofileparticipationintdays_ago) | Get participation history |
-| 9 | [POST /api/profile/register/*email*](#post-apiprofileregisterstringemail) | Bind email to user's subscriber UUID |
-| 10 | [POST /api/participate/*status*/*spot_id*](#post-apiparticipateintzone_idintspot_idstringstatus) | Participate crowd source parking spot information |
+| 9 | [POST /api/participate/*status*/*spot_id*](#post-apiparticipateintzone_idintspot_idstringstatus) | Participate crowd source parking spot information |
+| 10 | [POST /api/profile/register/*email*](#post-apiprofileregisterstringemail) | Bind email to user's subscriber UUID |
 
 #### `GET /api/zones/all`
 response:
@@ -203,28 +203,19 @@ Response:
 }
 ```
 
-#### `GET /api/profile/participation/<int:days_ago>`
+#### `GET /api/profile/participations/<int:days_ago>`
 Response:
 ```javascript
 [{
   "id": int,
-  "ts": int,
+  "ts_update": int,
+  "processed": boolean,
   "zone_id": int,
   "spot_id": int,
-  "value": int,
-  "credit_incentive": int
+  "participation_value": int,
+  "processed": boolean,
+  "incentive_value": int
 }]
-```
-
-#### `POST /api/profile/register/<string:email>`
-Response:
-```javascript
-{
-  "id": int,
-  "ts": datetime,
-  "subscriber_uuid": string,
-  "email": string
-}
 ```
 
 #### `POST /api/participate/<int:zone_id>/<int:spot_id>/<string:status>`
@@ -239,6 +230,18 @@ Response:
   "credit_incentive": int
 }
 ```
+
+#### `POST /api/profile/register/<string:email>`
+Response:
+```javascript
+{
+  "id": int,
+  "ts": datetime,
+  "subscriber_uuid": string,
+  "email": string
+}
+```
+
 
 
 ## Web Application
