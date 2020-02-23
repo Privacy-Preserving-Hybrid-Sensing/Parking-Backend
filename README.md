@@ -41,7 +41,7 @@ Every API endpoints return the same JSON representation:
   "trx_id": string,
   "path": string,
   "msg": string,
-  "data": []
+  "data": array / object
 }
 ```
 
@@ -76,15 +76,16 @@ response:
 ```javascript
 [{  
   "id": int,
-  "authorized": boolean,
+  "subscribed": boolean,
   "name": string,
   "description": string,
   "center_longitude": string,
   "center_latitude": string,
-  "credit_charge": int,
-  "num_available": int,
-  "num_unavailable": int,
-  "num_undefined": int,
+  "credit_required": int,
+  "spot_total": int,
+  "spot_available": int,
+  "spot_unavailable": int,
+  "spot_undefined": int,
   "ts_update": datetime,
   "geopoints": [{ 
       "id": int,
@@ -99,15 +100,16 @@ Response:
 ```javascript
 {  
   "id": int,
-  "authorized": boolean,
+  "subscribed": boolean,
   "name": string,
   "description": string,
   "center_longitude": string,
   "center_latitude": string,
-  "credit_charge": int,
-  "num_available": int,
-  "num_unavailable": int,
-  "num_undefined": int,
+  "credit_required": int,
+  "spot_total": int,
+  "spot_available": int,
+  "spot_unavailable": int,
+  "spot_undefined": int,
   "ts_update": datetime,
   "geopoints": [{ 
       "id": int,
@@ -122,15 +124,16 @@ Response:
 ```javascript
 [{  
   "id": int,
-  "authorized": boolean,
+  "subscribed": boolean,
   "name": string,
   "description": string,
   "center_longitude": string,
   "center_latitude": string,
-  "credit_charge": int,
-  "num_available": int,
-  "num_unavailable": int,
-  "num_undefined": int,
+  "credit_required": int,
+  "spot_total": int,
+  "spot_available": int,
+  "spot_unavailable": int,
+  "spot_undefined": int,
   "ts_update": datetime,
   "geopoints": [{ 
       "id": int,
@@ -151,8 +154,8 @@ Response:
   "registrar_uuid": string,
   "longitude": string,
   "latitude": string,
-  "voting_available": 0.0,
-  "voting_unavailable": 0.0,
+  "vote_available": 0.0,
+  "vote_unavailable": 0.0,
   "confidence_level": 0.0,
   "status": 0,
   "zone_id": 1
@@ -170,8 +173,8 @@ Response:
   "registrar_uuid": string,
   "longitude": string,
   "latitude": string,
-  "voting_available": 0.0,
-  "voting_unavailable": 0.0,
+  "vote_available": 0.0,
+  "vote_unavailable": 0.0,
   "confidence_level": 0.0,
   "status": 0,
   "zone_id": 1
@@ -185,7 +188,7 @@ Response:
   "id": int,
   "ts": datetime,
   "subscriber_uuid": string,
-  "zone": int,
+  "zone_id": int,
   "credit_charged": int
 }
 ```
