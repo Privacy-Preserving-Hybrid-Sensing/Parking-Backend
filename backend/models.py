@@ -150,7 +150,7 @@ class Profile(models.Model):
   def register(subscriber_uuid, email):
     profile_by_email_uuid = Profile.objects.filter(email=email, subscriber_uuid=subscriber_uuid).first()
     if profile_by_email_uuid is None:
-      key_validation = uuid.uuid1()
+      key_validation = str(uuid.uuid1())
       profile_by_email_uuid = Profile(subscriber_uuid=subscriber_uuid, email=email,key_validation=key_validation)
       profile_by_email_uuid.save()
     return profile_by_email_uuid

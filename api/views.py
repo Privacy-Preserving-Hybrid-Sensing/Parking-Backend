@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.db.models import Avg, Max, Min, Sum
 from django.db.models import Q
-from backend.models import ParkingSpot, Participation, ParkingZone, ParkingZonePolygonGeoPoint, Subscription, ParkingAvailabilityLog
+from backend.models import ParkingSpot, Participation, ParkingZone, ParkingZonePolygonGeoPoint, Subscription, ParkingAvailabilityLog, Profile
 import json
 from django.core import serializers
 from django.forms.models import model_to_dict
@@ -10,7 +10,8 @@ from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime, timedelta, date
 from .decorators import required_field
 
-DEFAULT_MINUTE_THRESHOLD = 1
+DEFAULT_MINUTE_THRESHOLD = 5
+BASE_VALIDATION = "http://localhost:8000/web/validation/"
 
 @csrf_exempt
 @required_field
@@ -348,5 +349,14 @@ def profile_register_email(request, email):
     subscriber_uuid = request.headers['Subscriber-Uuid']
     # Assumption: for 1 subscriber, there's only 1 zone subscription for 1 day
     profile = Profile.register(subscriber_uuid=subscriber_uuid, email=email)
-    msg = "Profile Credit OK"
+    validation_url = BASE_VALIDATION + profile.key_validation
+    msg = "Profile Register OK"
+    tmp = {
+      "id": profile.id,
+      "ts": profile.ts,
+      "subscriber_uuid": profile.subscriber_uuid,
+      "email": profile.email,
+      "validation_url": validation_url,
+      "validated": profile.validated
+    }
     return generate_dict_response_ok(request, msg, [tmp])

@@ -4,3 +4,6 @@ from django.shortcuts import render
 def index(request):
     return render(request, 'index.html')
 
+def validation_key(request, key):
+    return render(request, 'index.html')
+
