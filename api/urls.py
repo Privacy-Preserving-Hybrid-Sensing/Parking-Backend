@@ -17,6 +17,6 @@ urlpatterns = [
 
     path("profile/creditbalance", profile_creditbalance, name="profile_creditbalance"),
     path("profile/participations/<int:days_ago>", profile_participations_days_ago, name="profile_participations_days_ago"),
-    path("profile/register/<slug:email>", profile_register_email, name="profile_register_email"),
-    path("participate/<int:zone_id>/<int:spot_id>/<slug:status>", participate_zone_spot_status, name="participate_zone_spot_status"),
+    path("participate/<int:zone_id>/<int:spot_id>/<str:status>", participate_zone_spot_status, name="participate_zone_spot_status"),
+    path("profile/register/<str:email>", profile_register_email, name="profile_register_email"),
 ]

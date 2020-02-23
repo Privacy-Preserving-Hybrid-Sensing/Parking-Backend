@@ -255,7 +255,7 @@ def profile_creditbalance(request):
     incentive = 0
     charged = 0
 
-    data_participation = Participation.objects.filter(participant_uuid=subscriber_uuid, incentive_processed=True).aggregate(Sum('incentive_value'))
+    data_participation = Participation.objects.filter(participant_uuid=subscriber_uuid, processed=True).aggregate(Sum('incentive_value'))
     if data_participation['incentive_value__sum'] is not None:
       incentive += data_participation['incentive_value__sum']
 
@@ -271,7 +271,7 @@ def profile_creditbalance(request):
 
 
 def get_remain_credit(subscriber_uuid):
-    data_participation = Participation.objects.filter(participant_uuid=subscriber_uuid, incentive_processed=True).aggregate(Sum('incentive_value'))
+    data_participation = Participation.objects.filter(participant_uuid=subscriber_uuid, processed=True).aggregate(Sum('incentive_value'))
     total_credit = 0
     if data_participation['incentive_value__sum'] is not None:
       total_credit += data_participation['incentive_value__sum']
@@ -283,7 +283,7 @@ def get_remain_credit(subscriber_uuid):
 
 @csrf_exempt
 @required_field  
-def participate_zone_spot_status(request, status, parking_spot_id):
+def participate_zone_spot_status(request, zone_id, spot_id, status):
     subscriber_uuid = request.headers['Subscriber-Uuid']
 
     value_participation = 1
@@ -291,25 +291,31 @@ def participate_zone_spot_status(request, status, parking_spot_id):
     if status == 'unavailable':
       value_participation = -1
 
-    parking_spot = ParkingSpot.objects.filter(id=parking_spot_id).first()
-    new_data = ParkingAvailabilityLog(
-      participant_uuid = subscriber_uuid,
-      longitude = parking_spot.longitude,
-      latitude = parking_spot.latitude,
-      participation_value = value_participation,
-      parking_spot=parking_spot
-    )
-    new_data.save()
+    parking_zone = ParkingZone.objects.filter(id=zone_id).first()
 
-    participation_status, current_time = Participation.participate(
+    parking_spot = ParkingSpot.objects.filter(id=spot_id, zone=parking_zone).first()
+
+    data = Participation.participate(
       parking_spot, 
       subscriber_uuid,
       value_participation, 
       DEFAULT_MINUTE_THRESHOLD
     )
 
+
+    tmp = {
+      'id': data.id,
+      'ts_create': data.ts_create,
+      'ts_update': data.ts_update,
+      'zone_id': data.parking_spot.zone.id,
+      'spot_id': data.parking_spot.id,
+      'participation_value': data.participation_value,
+      'incentive_value': data.incentive_value,
+      'processed': data.processed
+    }
+
     msg = "Participation OK"
-    return generate_dict_response_ok(request, msg, [])
+    return generate_dict_response_ok(request, msg, tmp)
 
 @csrf_exempt
 @required_field  
@@ -339,10 +345,8 @@ def profile_participations_days_ago(request, days_ago):
 @csrf_exempt
 @required_field  
 def profile_register_email(request, email):
-    subscriber_uuid = request.POST['subscriber_uuid']
+    subscriber_uuid = request.headers['Subscriber-Uuid']
     # Assumption: for 1 subscriber, there's only 1 zone subscription for 1 day
-    total_credit = get_remain_credit(subscriber_uuid)
-    tmp = { 'incentive' : total_credit, 'subscriber_uuid':  subscriber_uuid}
-
+    profile = Profile.register(subscriber_uuid=subscriber_uuid, email=email)
     msg = "Profile Credit OK"
     return generate_dict_response_ok(request, msg, [tmp])

@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.timezone import now
 from datetime import datetime, timedelta, date
+import uuid 
 
 class ParkingZone(models.Model):
   name = models.CharField(max_length=100, db_index=True)
@@ -116,22 +117,19 @@ class Participation(models.Model):
 
   def participate(parking_spot, participant_uuid, participation_value, minute_treshold):
     time_treshold = datetime.now() - timedelta(minutes=minute_treshold)
-    previous_participation_data_in_time_threshold = Participation.objects.filter(ts_update__gt=time_treshold, parking_spot=parking_spot, participant_uuid=participant_uuid).first()
+    participation_data = Participation.objects.filter(ts_update__gt=time_treshold, parking_spot=parking_spot, participant_uuid=participant_uuid).first()
 
-    new_participation_status = False
-    current_time = datetime.now()
-    if previous_participation_data_in_time_threshold == None:
-      new_participation_data = Participation(participant_uuid=participant_uuid, participation_value=participation_value, parking_spot=parking_spot)
-      new_participation_data.save()
-      new_participation_status = True
+    if participation_data == None:
+      participation_data = Participation(participant_uuid=participant_uuid, participation_value=participation_value, parking_spot=parking_spot)
+      participation_data.save()
     else:
-      previous_participation_data_in_time_threshold.ts_update = current_time
-      previous_participation_data_in_time_threshold.participation_value = participation_value
-      previous_participation_data_in_time_threshold.processed = False
-      previous_participation_data_in_time_threshold.incentive_value = 0
-      previous_participation_data_in_time_threshold.save()
+      participation_data.ts_update = datetime.now()
+      participation_data.participation_value = participation_value
+      participation_data.processed = False
+      participation_data.incentive_value = 0
+      participation_data.save()
 
-    return new_participation_status, current_time
+    return participation_data
 
 class Subscription(models.Model):
   ts = models.DateTimeField(default=now)
@@ -139,3 +137,20 @@ class Subscription(models.Model):
   zone = models.ForeignKey(ParkingZone, on_delete=models.CASCADE, blank=True, null=True)
   charged = models.IntegerField(default=0)
 
+
+class Profile(models.Model):
+  ts = models.DateTimeField(default=now)
+  subscriber_uuid = models.CharField(max_length=100, db_index=True)
+  email = models.CharField(max_length=100, db_index=True)
+  key_validation = models.CharField(max_length=200, db_index=True)
+  validated = models.BooleanField(default=False)
+  class Meta:
+    unique_together = (('subscriber_uuid', 'email'),)
+
+  def register(subscriber_uuid, email):
+    profile_by_email_uuid = Profile.objects.filter(email=email, subscriber_uuid=subscriber_uuid).first()
+    if profile_by_email_uuid is None:
+      key_validation = uuid.uuid1()
+      profile_by_email_uuid = Profile(subscriber_uuid=subscriber_uuid, email=email,key_validation=key_validation)
+      profile_by_email_uuid.save()
+    return profile_by_email_uuid

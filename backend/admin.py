@@ -1,7 +1,7 @@
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources
 from django.contrib import admin
-from .models import ParkingZone, ParkingSpot, Subscription, ParkingZonePolygonGeoPoint, Participation
+from .models import ParkingZone, ParkingSpot, Subscription, ParkingZonePolygonGeoPoint, Participation, Profile
 
 
 class ParkingZoneResource(resources.ModelResource):
@@ -34,6 +34,13 @@ class SubscriptionAdmin(ImportExportModelAdmin):
   resource_class = SubscriptionResource
   list_display = ['ts','subscriber_uuid','zone','charged']
 
+class ProfileResource(resources.ModelResource):
+  class Meta:
+    model = Profile
+class ProfileAdmin(ImportExportModelAdmin):
+  resource_class = ProfileResource
+  list_display = ['ts','subscriber_uuid', 'email', 'key_validation', 'validated']
+
 class ParticipationResource(resources.ModelResource):
   class Meta:
     model = Participation
@@ -41,8 +48,11 @@ class ParticipationAdmin(ImportExportModelAdmin):
   resource_class = ParticipationResource
   list_display = ['ts_update','participant_uuid', 'participation_value', 'processed','parking_spot', 'incentive_value']
 
+
+
 admin.site.register(ParkingZone, ParkingZoneAdmin)
 admin.site.register(ParkingZonePolygonGeoPoint, ParkingZonePolygonGeoPointAdmin)
 admin.site.register(ParkingSpot, ParkingSpotAdmin)
 admin.site.register(Subscription, SubscriptionAdmin)
 admin.site.register(Participation, ParticipationAdmin)
+admin.site.register(Profile, ProfileAdmin)

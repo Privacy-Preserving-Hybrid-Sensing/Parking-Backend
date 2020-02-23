@@ -218,27 +218,31 @@ Response:
 }]
 ```
 
-#### `POST /api/participate/<int:zone_id>/<int:spot_id>/<string:status>`
+#### `GET /api/participate/<int:zone_id>/<int:spot_id>/<string:status>`
 Response:
 ```javascript
 {
   "id": int,
-  "ts": int,
+  "ts_update": int,
+  "processed": boolean,
   "zone_id": int,
   "spot_id": int,
-  "value": int,
-  "credit_incentive": int
+  "participation_value": int,
+  "processed": boolean,
+  "incentive_value": int
 }
 ```
 
-#### `POST /api/profile/register/<string:email>`
+#### `GET /api/profile/register/<string:email>`
 Response:
 ```javascript
 {
   "id": int,
   "ts": datetime,
   "subscriber_uuid": string,
-  "email": string
+  "email": string,
+  "validation_url": string,
+  "validated": boolean
 }
 ```
 
