@@ -86,9 +86,9 @@ def get_parking_zone_geopoints(zone, subscriber_uuid):
     cnt_undefined = -1
     cnt_total = -1
     if subscription_status:
-      cnt_available = ParkingSpot.objects.filter(zone=zone, status__gt=0).count()
-      cnt_unavailable = ParkingSpot.objects.filter(zone=zone, status__lt=0).count()
-      cnt_undefined = ParkingSpot.objects.filter(zone=zone, status=0).count()
+      cnt_available = ParkingSpot.objects.filter(zone=zone, parking_status__gt=0).count()
+      cnt_unavailable = ParkingSpot.objects.filter(zone=zone, parking_status__lt=0).count()
+      cnt_undefined = ParkingSpot.objects.filter(zone=zone, parking_status=0).count()
       cnt_total = cnt_available + cnt_unavailable + cnt_undefined
 
 
@@ -132,7 +132,7 @@ def zones_id_spots_all(request, zone_id):
         "vote_available": parking_spot.vote_available,
         "vote_unavailable": parking_spot.vote_unavailable,
         "confidence_level": parking_spot.confidence_level,
-        "status": parking_spot.status,
+        "parking_status": parking_spot.parking_status,
         "zone_id": parking_spot.zone.id
       }
       ret.append(tmp)
@@ -166,7 +166,7 @@ def zones_id_spots_id(request, zone_id, spot_id):
         "vote_available": parking_spot.vote_available,
         "vote_unavailable": parking_spot.vote_unavailable,
         "confidence_level": parking_spot.confidence_level,
-        "status": parking_spot.status,
+        "parking_status": parking_spot.parking_status,
         "zone_id": parking_spot.zone.id
     }
     
@@ -284,12 +284,11 @@ def get_remain_credit(subscriber_uuid):
 
 @csrf_exempt
 @required_field  
-def participate_zone_spot_status(request, zone_id, spot_id, status):
+def participate_zone_spot_status(request, zone_id, spot_id, str_status):
     subscriber_uuid = request.headers['Subscriber-Uuid']
 
     value_participation = 1
-
-    if status == 'unavailable':
+    if str_status == 'unavailable':
       value_participation = -1
 
     parking_zone = ParkingZone.objects.filter(id=zone_id).first()
@@ -312,7 +311,7 @@ def participate_zone_spot_status(request, zone_id, spot_id, status):
       'spot_id': data.parking_spot.id,
       'participation_value': data.participation_value,
       'incentive_value': data.incentive_value,
-      'processed': data.processed
+      'incentive_processed': data.incentive_processed
     }
 
     msg = "Participation OK"

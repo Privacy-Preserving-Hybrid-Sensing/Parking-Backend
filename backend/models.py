@@ -29,68 +29,71 @@ class ParkingSpot(models.Model):
   latitude = models.CharField(max_length=100, default="0.0")
   vote_available = models.IntegerField(default=0)
   vote_unavailable = models.IntegerField(default=0)
-  confidence_level = models.FloatField(default=0)
-  status = models.IntegerField(default=0)
+  confidence_level = models.FloatField(default=1.0)
+  parking_status = models.IntegerField(default=0)
   zone = models.ForeignKey(ParkingZone, on_delete=models.CASCADE, blank=True, null=True)
   class Meta:
     unique_together = (('longitude', 'latitude'),)
 
-  def change(longitude, latitude, vote_available, vote_unavailable, status, confidence_level):
-    change_status = "unchanged"
-    current_data = ParkingSpot.objects.filter(longitude = longitude, latitude = latitude).first()
-    if current_data.vote_available != vote_available or current_data.vote_unavailable != vote_unavailable or current_data.status != status:
-      current_data.vote_available = vote_available
-      current_data.vote_unavailable = vote_unavailable
-      current_data.confidence_level = confidence_level
-      current_data.status = status
-      current_data.ts_update = datetime.now()
-      current_data.save()
-      ParkingSpotChanges(parking_spot=current_data, longitude=longitude, latitude=latitude, vote_available=vote_available, vote_unavailable=vote_unavailable, status=status, confidence_level=confidence_level)
-      change_status = "changed"
+  # def change(spot_id, vote_available, vote_unavailable, status, confidence_level):
+  #   change_status = "unchanged"
+  #   current_data = ParkingSpot.objects.filter(id=spot_id).first()
+  #   if current_data.vote_available != vote_available or current_data.vote_unavailable != vote_unavailable or current_data.status != status:
+  #     current_data.vote_available = vote_available
+  #     current_data.vote_unavailable = vote_unavailable
+  #     current_data.confidence_level = confidence_level
+  #     current_data.status = status
+  #     current_data.ts_update = datetime.now()
+  #     current_data.save()
+  #     ParkingSpotChanges(parking_spot=current_data, longitude=longitude, latitude=latitude, vote_available=vote_available, vote_unavailable=vote_unavailable, status=status, confidence_level=confidence_level)
+  #     change_status = "changed"
 
-    return change_status
+  #   return change_status
 
-  def create(registrar_uuid, longitude, latitude, zone):
-    current_data = ParkingSpot.objects.filter(longitude = longitude, latitude = latitude).first()
-    if current_data == None:
-      new_data = ParkingSpot(
-        registrar_uuid = registrar_uuid,
-        longitude = longitude,
-        latitude = latitude,
-        vote_available = 0,
-        vote_unavailable = 0,
-        confidence_level=0,
-        status = 0,
-        zone = zone
-      )
-      new_data.save()
-      parking_changes = ParkingSpotChanges(
-        parking_spot = new_data,
-        longitude = longitude,
-        latitude = latitude,
-        vote_available = 0,
-        vote_unavailable = 0,
-        confidence_level = 0,
-        status = 0,
-      )
-      parking_changes.save()
+  # def create(registrar_uuid, longitude, latitude, zone):
+  #   current_data = ParkingSpot.objects.filter(longitude = longitude, latitude = latitude).first()
+  #   if current_data == None:
+  #     new_data = ParkingSpot(
+  #       registrar_uuid = registrar_uuid,
+  #       longitude = longitude,
+  #       latitude = latitude,
+  #       vote_available = 0,
+  #       vote_unavailable = 0,
+  #       confidence_level=0,
+  #       status = 0,
+  #       zone = zone
+  #     )
+  #     new_data.save()
+  #     parking_changes = ParkingSpotChanges(
+  #       parking_spot = new_data,
+  #       longitude = longitude,
+  #       latitude = latitude,
+  #       vote_available = 0,
+  #       vote_unavailable = 0,
+  #       confidence_level = 0,
+  #       status = 0,
+  #     )
+  #     parking_changes.save()
 
 class ParkingZonePolygonGeoPoint(models.Model):
   parking_zone = models.ForeignKey(ParkingZone, on_delete=models.CASCADE, blank=True, null=True)
   longitude = models.CharField(max_length=100)
   latitude = models.CharField(max_length=100)
 
-class ParkingSpotChanges(models.Model):
-  parking_spot = models.ForeignKey(ParkingSpot, on_delete=models.CASCADE, blank=True, null=True)
-  ts_change = models.DateTimeField(default=now)
-  longitude = models.CharField(max_length=100, default="0.0", db_index=True)
-  latitude = models.CharField(max_length=100, default="0.0", db_index=True)
+class ParkingSpotHistory(models.Model):
+  name = models.CharField(max_length=100, db_index=True, default="")
+  ts_register = models.DateTimeField(default=now)
+  ts_update = models.DateTimeField(default=now)
+  registrar_uuid = models.CharField(max_length=100, default="")
+  longitude = models.CharField(max_length=100, default="0.0")
+  latitude = models.CharField(max_length=100, default="0.0")
   vote_available = models.IntegerField(default=0)
   vote_unavailable = models.IntegerField(default=0)
-  confidence_level = models.FloatField(default=0)
-  status = models.IntegerField(default=0)
+  confidence_level = models.FloatField(default=1.0)
+  parking_status = models.IntegerField(default=0)
+  zone = models.ForeignKey(ParkingZone, on_delete=models.CASCADE, blank=True, null=True)
   class Meta:
-    unique_together = (('longitude', 'latitude', 'ts_change'),)
+    unique_together = (('longitude', 'latitude', 'ts_update'),)
 
 class ParticipantMovementLog(models.Model):
   ts = models.DateTimeField(default=now)
@@ -111,7 +114,7 @@ class Participation(models.Model):
   ts_update = models.DateTimeField(default=now)
   participant_uuid = models.CharField(max_length=100, db_index=True)
   participation_value = models.FloatField()
-  processed = models.BooleanField(default=False)
+  incentive_processed = models.BooleanField(default=False)
   parking_spot = models.ForeignKey(ParkingSpot, on_delete=models.CASCADE, blank=True, null=True)
   incentive_value = models.IntegerField(default=0)
 
@@ -125,7 +128,7 @@ class Participation(models.Model):
     else:
       participation_data.ts_update = datetime.now()
       participation_data.participation_value = participation_value
-      participation_data.processed = False
+      participation_data.incentive_processed = False
       participation_data.incentive_value = 0
       participation_data.save()
 

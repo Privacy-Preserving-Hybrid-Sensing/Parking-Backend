@@ -2,8 +2,7 @@
 
 ![Smart Parking Platform](https://gitlab.anu.edu.au/u1063268/smart-parking-backend/raw/master/docs/platform.png "Smart Parking Platform")
 
-SmartParking is an open information sharing of CrowdSourced platform for incentivize Parking Spot.
-SmartParking Backend provides web access, data API and repository for Mobile and Web Based app. For Android based App, please visit [Smart Parking App](https://gitlab.anu.edu.au/u1063268/smart-parking-app) project.
+SmartParking is an incentivize CrowdSourced information sharing platform for Parking Spot availability. SmartParking Backend provides web access, data API and repository for Mobile and Web Based app. For Android based App, please visit [Smart Parking App](https://gitlab.anu.edu.au/u1063268/smart-parking-app) project.
 
 
 This docs describe  SmartParking Backend modules:
@@ -157,7 +156,7 @@ Response:
   "vote_available": 0.0,
   "vote_unavailable": 0.0,
   "confidence_level": 0.0,
-  "status": 0,
+  "parking_status": 0,
   "zone_id": 1
 }]
 ```
@@ -176,7 +175,7 @@ Response:
   "vote_available": 0.0,
   "vote_unavailable": 0.0,
   "confidence_level": 0.0,
-  "status": 0,
+  "parking_status": 0,
   "zone_id": 1
 }
 ```
@@ -209,11 +208,10 @@ Response:
 [{
   "id": int,
   "ts_update": int,
-  "processed": boolean,
   "zone_id": int,
   "spot_id": int,
   "participation_value": int,
-  "processed": boolean,
+  "participation_processed": boolean,
   "incentive_value": int
 }]
 ```
@@ -224,11 +222,10 @@ Response:
 {
   "id": int,
   "ts_update": int,
-  "processed": boolean,
   "zone_id": int,
   "spot_id": int,
   "participation_value": int,
-  "processed": boolean,
+  "participation_processed": boolean,
   "incentive_value": int
 }
 ```
