@@ -185,11 +185,15 @@ def zones_id_subscribe(request, zone_id):
 
     subscription = Subscription.objects.filter(subscriber_uuid=subscriber_uuid, zone=parking_zone, ts__date=date.today()).first()
 
-    remain_credit = get_remain_credit(subscriber_uuid)
+    incentive = get_incentive(subscriber_uuid)
+    charged = get_charged(subscriber_uuid)
+
+    balance = incentive - charged
+
     required_credit = parking_zone.credit_required
 
-    if(remain_credit < required_credit):
-      return generate_dict_response_err(request, 'Credit required: ' + str(required_credit) + ", subscriber_uuid: " + subscriber_uuid + " only have " + str(remain_credit) )
+    if(balance < required_credit):
+      return generate_dict_response_err(request, 'Credit required: ' + str(required_credit) + ", subscriber_uuid: " + subscriber_uuid + " only have " + str(balance) )
 
     msg = ""
     if subscription is not None:
@@ -253,26 +257,31 @@ def generate_dict_response_ok(request, msg, data):
 def profile_creditbalance(request):
     subscriber_uuid = request.headers['Subscriber-Uuid']
     # Assumption: for 1 subscriber, there's only 1 zone subscription for 1 day
-    incentive = 0
-    charged = 0
+    incentive = get_incentive(subscriber_uuid)
+    charged = get_charged(subscriber_uuid)
 
-    data_participation = Participation.objects.filter(participant_uuid=subscriber_uuid, processed=True).aggregate(Sum('incentive_value'))
-    if data_participation['incentive_value__sum'] is not None:
-      incentive += data_participation['incentive_value__sum']
-
-    data_charged = Subscription.objects.filter(subscriber_uuid=subscriber_uuid).aggregate(Sum('charged'))
-    if data_charged['charged__sum'] is not None:
-      charged += data_charged['charged__sum']
-    
     balance = incentive - charged
     tmp = { 'balance' : balance, 'incentive': incentive, 'charged': charged}
 
     msg = "Profile Credit OK"
     return generate_dict_response_ok(request, msg, tmp)
 
+def get_incentive(subscriber_uuid):
+    data_participation = Participation.objects.filter(participant_uuid=subscriber_uuid, incentive_processed=True).aggregate(Sum('incentive_value'))
+    incentive = 0
+    if data_participation['incentive_value__sum'] is not None:
+      incentive += data_participation['incentive_value__sum']
+    return incentive
+
+def get_charged(subscriber_uuid):
+    data_charged = Subscription.objects.filter(subscriber_uuid=subscriber_uuid).aggregate(Sum('charged'))
+    charged = 0
+    if data_charged['charged__sum'] is not None:
+      charged += data_charged['charged__sum']
+    return charged
 
 def get_remain_credit(subscriber_uuid):
-    data_participation = Participation.objects.filter(participant_uuid=subscriber_uuid, processed=True).aggregate(Sum('incentive_value'))
+    data_participation = Participation.objects.filter(participant_uuid=subscriber_uuid, incentive_processed=True).aggregate(Sum('incentive_value'))
     total_credit = 0
     if data_participation['incentive_value__sum'] is not None:
       total_credit += data_participation['incentive_value__sum']
@@ -335,7 +344,7 @@ def profile_participations_days_ago(request, days_ago):
         'spot_id': data.parking_spot.id,
         'participation_value': data.participation_value,
         'incentive_value': data.incentive_value,
-        'processed': data.processed
+        'incentive_processed': data.incentive_processed
       }
       ret.append(tmp)
 

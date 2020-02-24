@@ -211,7 +211,7 @@ Response:
   "zone_id": int,
   "spot_id": int,
   "participation_value": int,
-  "participation_processed": boolean,
+  "incentive_processed": boolean,
   "incentive_value": int
 }]
 ```
@@ -225,7 +225,7 @@ Response:
   "zone_id": int,
   "spot_id": int,
   "participation_value": int,
-  "participation_processed": boolean,
+  "incentive_processed": boolean,
   "incentive_value": int
 }
 ```
