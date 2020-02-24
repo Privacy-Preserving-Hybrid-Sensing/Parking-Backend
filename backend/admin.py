@@ -11,7 +11,7 @@ class ParkingZoneResource(resources.ModelResource):
 
 class ParkingZoneAdmin(ImportExportModelAdmin):
   resource_class = ParkingZoneResource
-  list_display = ['name', 'description', 'center_longitude', 'center_latitude', 'credit_required' ]
+  list_display = ['name', 'description', 'center_longitude', 'center_latitude', 'credit_required', 'token']
 
 class ParkingZonePolygonGeoPointResource(resources.ModelResource):
   class Meta:
@@ -32,7 +32,7 @@ class ParkingSpotHistoryResource(resources.ModelResource):
     model = ParkingSpotHistory
 class ParkingSpotHistoryAdmin(ImportExportModelAdmin):
   resource_class = ParkingSpotHistoryResource
-  list_display = ['name', 'ts_register', 'ts_update','registrar_uuid','longitude','latitude','vote_available','vote_unavailable','confidence_level','parking_status','zone']
+  list_display = ['name', 'ts_previous', 'ts_latest','registrar_uuid','longitude','latitude','vote_available','vote_unavailable','confidence_level','parking_status', 'parking_spot', 'zone']
 
 class SubscriptionResource(resources.ModelResource):
   class Meta:

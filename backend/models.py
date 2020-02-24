@@ -7,9 +7,13 @@ class ParkingZone(models.Model):
   name = models.CharField(max_length=100, db_index=True)
   ts_update = models.DateTimeField(default=now)
   description = models.CharField(max_length=1000, default="")
+  token = models.CharField(max_length=100, default="")
   center_longitude = models.CharField(max_length=100, default="0.0")
   center_latitude = models.CharField(max_length=100, default="0.0")
   credit_required = models.IntegerField(default=5)
+  class Meta:
+      verbose_name = 'Parking Zone'
+      verbose_name_plural = 'Parking Zones'
 
   # Status Codes for ParkingSpot
   # case -3: MARKER_PARKING_UNAVAILABLE_CONFIRMED;
@@ -33,7 +37,9 @@ class ParkingSpot(models.Model):
   parking_status = models.IntegerField(default=0)
   zone = models.ForeignKey(ParkingZone, on_delete=models.CASCADE, blank=True, null=True)
   class Meta:
-    unique_together = (('longitude', 'latitude'),)
+      unique_together = (('longitude', 'latitude'),)
+      verbose_name = 'Parking Spot'
+      verbose_name_plural = 'Parking Spots'
 
   # def change(spot_id, vote_available, vote_unavailable, status, confidence_level):
   #   change_status = "unchanged"
@@ -79,11 +85,15 @@ class ParkingZonePolygonGeoPoint(models.Model):
   parking_zone = models.ForeignKey(ParkingZone, on_delete=models.CASCADE, blank=True, null=True)
   longitude = models.CharField(max_length=100)
   latitude = models.CharField(max_length=100)
+  class Meta:
+      unique_together = (('parking_zone', 'longitude', 'latitude'),)
+      verbose_name = 'Parking Zone Polygon GeoPoint'
+      verbose_name_plural = 'Parking Zone Polygon GeoPoints'
 
 class ParkingSpotHistory(models.Model):
   name = models.CharField(max_length=100, db_index=True, default="")
-  ts_register = models.DateTimeField(default=now)
-  ts_update = models.DateTimeField(default=now)
+  ts_previous = models.DateTimeField(default=now)
+  ts_latest = models.DateTimeField(default=now)
   registrar_uuid = models.CharField(max_length=100, default="")
   longitude = models.CharField(max_length=100, default="0.0")
   latitude = models.CharField(max_length=100, default="0.0")
@@ -91,15 +101,21 @@ class ParkingSpotHistory(models.Model):
   vote_unavailable = models.IntegerField(default=0)
   confidence_level = models.FloatField(default=1.0)
   parking_status = models.IntegerField(default=0)
+  parking_spot = models.ForeignKey(ParkingSpot, on_delete=models.CASCADE, blank=True, null=True)
   zone = models.ForeignKey(ParkingZone, on_delete=models.CASCADE, blank=True, null=True)
   class Meta:
-    unique_together = (('longitude', 'latitude', 'ts_update'),)
+      unique_together = (('parking_spot', 'ts_latest'),)
+      verbose_name = 'Parking Spot History'
+      verbose_name_plural = 'Parking Spot Histories'
 
 class ParticipantMovementLog(models.Model):
   ts = models.DateTimeField(default=now)
   participant_uuid = models.CharField(max_length=100, db_index=True)
   longitude = models.CharField(max_length=100, default="0.0")
   latitude = models.CharField(max_length=100, default="0.0")
+  class Meta:
+      verbose_name = 'Participant Movement Log'
+      verbose_name_plural = 'Participant Movement Logs'
 
 class ParkingAvailabilityLog(models.Model):
   ts = models.DateTimeField(default=now)
@@ -108,6 +124,9 @@ class ParkingAvailabilityLog(models.Model):
   latitude = models.CharField(max_length=100, default="0.0")
   participation_value = models.FloatField(default=0)
   parking_spot = models.ForeignKey(ParkingSpot, on_delete=models.CASCADE, blank=True, null=True)
+  class Meta:
+      verbose_name = 'Parking Availability Log'
+      verbose_name_plural = 'Parking Availability Logs'
 
 class Participation(models.Model):
   ts_create = models.DateTimeField(default=now)
@@ -117,6 +136,9 @@ class Participation(models.Model):
   incentive_processed = models.BooleanField(default=False)
   parking_spot = models.ForeignKey(ParkingSpot, on_delete=models.CASCADE, blank=True, null=True)
   incentive_value = models.IntegerField(default=0)
+  class Meta:
+      verbose_name = 'Participation'
+      verbose_name_plural = 'Participations'
 
   def participate(parking_spot, participant_uuid, participation_value, minute_treshold):
     time_treshold = datetime.now() - timedelta(minutes=minute_treshold)
@@ -139,6 +161,9 @@ class Subscription(models.Model):
   subscriber_uuid = models.CharField(max_length=100, db_index=True)
   zone = models.ForeignKey(ParkingZone, on_delete=models.CASCADE, blank=True, null=True)
   charged = models.IntegerField(default=0)
+  class Meta:
+      verbose_name = 'Subscription'
+      verbose_name_plural = 'Subscriptions'
 
 
 class Profile(models.Model):
@@ -148,7 +173,9 @@ class Profile(models.Model):
   key_validation = models.CharField(max_length=200, db_index=True)
   validated = models.BooleanField(default=False)
   class Meta:
-    unique_together = (('subscriber_uuid', 'email'),)
+      unique_together = (('subscriber_uuid', 'email'),)
+      verbose_name = 'Profile'
+      verbose_name_plural = 'Profiles'
 
   def register(subscriber_uuid, email):
     profile_by_email_uuid = Profile.objects.filter(email=email, subscriber_uuid=subscriber_uuid).first()

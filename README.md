@@ -187,6 +187,7 @@ Response:
   "id": int,
   "ts": datetime,
   "subscriber_uuid": string,
+  "subscription_token": string,
   "zone_id": int,
   "credit_charged": int
 }

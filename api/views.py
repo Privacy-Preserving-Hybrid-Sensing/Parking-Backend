@@ -208,6 +208,7 @@ def zones_id_subscribe(request, zone_id):
       "id": subscription.id,
       "ts": subscription.ts,
       "subscriber_uuid": subscription.subscriber_uuid,
+      "subscription_token": parking_zone.token,
       "zone_id": subscription.zone.id,
       "charged": subscription.charged
     }

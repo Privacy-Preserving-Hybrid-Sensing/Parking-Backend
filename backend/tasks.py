@@ -3,7 +3,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from logging import getLogger
 import pika
 import json
-from backend.models import ParkingAvailabilityLog, ParticipantMovementLog, ParkingSpot, Subscription, ParkingZone, Participation, ParkingZonePolygonGeoPoint
+from backend.models import ParkingAvailabilityLog, ParticipantMovementLog, ParkingSpot, Subscription, ParkingZone, Participation, ParkingZonePolygonGeoPoint, ParkingSpotHistory
 from datetime import datetime, timedelta, date
 from django.conf import settings
 import threading
@@ -20,7 +20,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 env = environ.Env()
 environ.Env.read_env(BASE_DIR + "/.env")  # reading .env file
 
-PROCESSING_TIME_WINDOW = 300    # IN SECONDS
+PROCESSING_TIME_WINDOW = 300    # IN SECONDS (300 seconds => 5 minutes)
 PROCESSING_INTERVAL = 5         # IN SECONDS
 
 
@@ -82,7 +82,7 @@ class MAJORITY_Thread(threading.Thread):
           majority = data['available'] - data['unavailable']
           total = data['total_participants']
           confidence_level = 1
-          parking_status = 0
+          parking_status = None
 
           if total > 0:
             if majority > 0:
@@ -103,33 +103,39 @@ class MAJORITY_Thread(threading.Thread):
               elif confidence_level > 0.1:
                 parking_status = -1
 
+          current_parking_spot_data = ParkingSpot.objects.filter(id=data['spot_id']).first()
+          if parking_status is not None and current_parking_spot_data.parking_status != parking_status:
+            ts_latest = datetime.now()
 
-
-          current_data = ParkingSpot.objects.filter(id=data['spot_id']).first()
-          if current_data.parking_status != parking_status:
-            current_data.vote_available = data['available']
-            current_data.vote_unavailable = data['unavailable']
-            current_data.confidence_level = confidence_level
-            current_data.parking_status = parking_status
-            current_data.ts_update = datetime.now()
-            current_data.save()
             history = ParkingSpotHistory(
-              name = current_data.name,
-              ts_register = current_data.ts_register,
-              ts_update = current_data.ts_update,
-              registrar_uuid = current_data.registrar_uuid,
-              longitude = current_data.longitude,
-              latitude = current_data.latitude,
-              vote_available = current_data.vote_available,
-              vote_unavailable = current_data.vote_unavailable,
-              confidence_level = current_data.confidence_level,
-              parking_status = current_data.parking_status,
-              zone = current_data.zone
+              name = current_parking_spot_data.name,
+              ts_previous = current_parking_spot_data.ts_update,
+              ts_latest = ts_latest,
+              registrar_uuid = current_parking_spot_data.registrar_uuid,
+              longitude = current_parking_spot_data.longitude,
+              latitude = current_parking_spot_data.latitude,
+              vote_available = data['available'],
+              vote_unavailable = data['unavailable'],
+              confidence_level = confidence_level,
+              parking_status = parking_status,
+              parking_spot = current_parking_spot_data,
+              zone = current_parking_spot_data.zone
             )
             history.save()
-            # TODO: BROADCAST CHANGES
 
-          print(current_data)
+            current_parking_spot_data.vote_available = data['available']
+            current_parking_spot_data.vote_unavailable = data['unavailable']
+            current_parking_spot_data.confidence_level = confidence_level
+            current_parking_spot_data.parking_status = parking_status
+            current_parking_spot_data.ts_update = ts_latest
+            current_parking_spot_data.save()
+
+            # TODO: BROADCAST CHANGES
+            self.broadcast_changes(current_parking_spot_data)
+
+    def broadcast_parking_spot_changes(self, parking_spot):
+        
+        pass
 
     def run(self):
         while True:
