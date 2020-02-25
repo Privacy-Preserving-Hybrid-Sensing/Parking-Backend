@@ -16,9 +16,9 @@ This docs describe how to use the SmartParking API. We hope you enjoy these docs
 
 ### Subscriber UUID
 
-All POST method API requests require the use of a subscriber_uuid. It's not a username/password thing, just an anonymous identification that represent yourself in this system. Another method of privacy presenving mechanism is on other research.
+All POST method API requests require the use of a subscriber_uuid. It's not a username/password thing, just an anonymous identification that represent yourself in this system. Another method of privacy presenving mechanism is in another research.
 
-To identify an API request, you should provide your Subscriber UUID key in the `subscriber_uuid` header element. 
+To identify an API request, you should provide your Subscriber UUID key in the `Subscriber-UUID` header element. 
 Example HTTP Header:
 
 ```
@@ -68,7 +68,7 @@ For other HTTP code response, means as is.
 | 7 | [GET /api/profile/creditbalance](#get-apiprofilecreditbalance) | Get credit participation balance |
 | 8 | [GET /api/profile/participation/latest](#get-apiprofileparticipationlatest) | Get latest participation history (in evaluation treshold, eg: 5 min) |
 | 9 | [GET /api/profile/participation/*days_ago*](#get-apiprofileparticipationintdays_ago) | Get participation history |
-| 10 | [POST /api/participate/*status*/*spot_id*](#post-apiparticipateintzone_idintspot_idstringstatus) | Participate crowd source parking spot information |
+| 10 | [POST /api/participate/*zone_id*/*spot_id*/*status*](#post-apiparticipateintzone_idintspot_idstringstatus) | Participate crowd source parking spot information |
 | 11 | [POST /api/profile/register/*email*](#post-apiprofileregisterstringemail) | Bind email to user's subscriber UUID |
 
 #### `GET /api/zones/all`
