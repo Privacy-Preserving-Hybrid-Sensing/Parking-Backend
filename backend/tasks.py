@@ -132,8 +132,7 @@ class MAJORITY_Thread(threading.Thread):
             current_parking_spot_data.ts_update = ts_latest
             current_parking_spot_data.save()
 
-            # TODO: BROADCAST CHANGES
-            self.broadcast_parking_spot_changes_with_topic_zone_token(current_parking_spot_data)
+          self.broadcast_parking_spot_changes_with_topic_zone_token(current_parking_spot_data)
 
     def broadcast_parking_spot_changes_with_topic_zone_token(self, parking_spot):
         token = parking_spot.zone.token
