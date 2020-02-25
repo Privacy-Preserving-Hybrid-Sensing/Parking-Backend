@@ -85,17 +85,21 @@ def get_parking_zone_geopoints(zone, subscriber_uuid):
     cnt_unavailable = -1
     cnt_undefined = -1
     cnt_total = -1
+
+    subscription_token = ""
     if subscription_status:
       cnt_available = ParkingSpot.objects.filter(zone=zone, parking_status__gt=0).count()
       cnt_unavailable = ParkingSpot.objects.filter(zone=zone, parking_status__lt=0).count()
       cnt_undefined = ParkingSpot.objects.filter(zone=zone, parking_status=0).count()
       cnt_total = cnt_available + cnt_unavailable + cnt_undefined
+      subscription_token = zone.token
 
 
     list_geopoints = list(parkingzone_geopoints)
     tmp = {
       'id': zone.id,
       'subscribed': subscription_status,
+      'subscription_token': subscription_token,
       'name': zone.name,
       'description': zone.description,
       'center_longitude': zone.center_longitude,
@@ -326,6 +330,33 @@ def participate_zone_spot_status(request, zone_id, spot_id, str_status):
 
     msg = "Participation OK"
     return generate_dict_response_ok(request, msg, tmp)
+
+
+@csrf_exempt
+@required_field  
+def profile_participations_latest(request):
+    subscriber_uuid = request.headers['Subscriber-Uuid']
+    # Assumption: for 1 subscriber, there's only 1 zone subscription for 1 day
+    time_treshold = datetime.now() - timedelta(minutes=DEFAULT_MINUTE_THRESHOLD)
+
+    participant_datas = Participation.objects.filter(participant_uuid=subscriber_uuid, ts_create__gt=time_treshold).order_by('ts_create').all()
+    ret = []
+    for data in participant_datas:
+      tmp = {
+        'id': data.id,
+        'ts_create': data.ts_create,
+        'ts_update': data.ts_update,
+        'zone_id': data.parking_spot.zone.id,
+        'spot_id': data.parking_spot.id,
+        'participation_value': data.participation_value,
+        'incentive_value': data.incentive_value,
+        'incentive_processed': data.incentive_processed
+      }
+      ret.append(tmp)
+
+    msg = "Latest Participations OK"
+    return generate_dict_response_ok(request, msg, ret)
+
 
 @csrf_exempt
 @required_field  

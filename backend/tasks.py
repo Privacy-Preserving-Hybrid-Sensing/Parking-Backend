@@ -21,10 +21,10 @@ env = environ.Env()
 environ.Env.read_env(BASE_DIR + "/.env")  # reading .env file
 
 PROCESSING_TIME_WINDOW = 300    # IN SECONDS (300 seconds => 5 minutes)
-PROCESSING_INTERVAL = 5         # IN SECONDS
+PROCESSING_INTERVAL = 3        # IN SECONDS
 
 
-DEFAULT_PARTICIPANT_TO_SERVER_ROUTING_KEY = "PARTICIPANT_TO_SERVER"
+# DEFAULT_PARTICIPANT_TO_SERVER_ROUTING_KEY = "PARTICIPANT_TO_SERVER"
 
 credentials = pika.PlainCredentials(env('RABBITUSER'), env('RABBITPASS'))
 parameters = pika.ConnectionParameters(
@@ -34,19 +34,20 @@ parameters = pika.ConnectionParameters(
     credentials
 )
 
-# connection_send = pika.BlockingConnection(parameters)
-# channel_send = connection_send.channel()
 
-connection_recv = pika.BlockingConnection(parameters)
-channel_recv = connection_recv.channel()
-queue_name_recv = channel_recv.queue_declare('', exclusive=True).method.queue
-channel_recv.queue_bind(exchange="amq.topic", routing_key=DEFAULT_PARTICIPANT_TO_SERVER_ROUTING_KEY, queue=queue_name_recv)
+# connection_recv = pika.BlockingConnection(parameters)
+# channel_recv = connection_recv.channel()
+# queue_name_recv = channel_recv.queue_declare('', exclusive=True).method.queue
+# channel_recv.queue_bind(exchange="amq.topic", routing_key=DEFAULT_PARTICIPANT_TO_SERVER_ROUTING_KEY, queue=queue_name_recv)
 
-amqp_url = 'amqp://'+ env('RABBITUSER') +':'+ env('RABBITUSER') +'@'+ env('RABBITHOST') +':'+ env('RABBITPORT') +'/%2F?connection_attempts=30&heartbeat=3600'
-publisher = AMQPPublisher(amqp_url)
+# amqp_url = 'amqp://'+ env('RABBITUSER') +':'+ env('RABBITPASS') +'@'+ env('RABBITHOST') +':'+ env('RABBITPORT') +'/%2F?connection_attempts=30&heartbeat=3600'
+# publisher = AMQPPublisher(amqp_url)
+# publisher.run()
+# publisher.publish_message("TES123")
 
 
 class MAJORITY_Thread(threading.Thread):
+    channel = None
 
     def calculate_parking_log(self):
         data_collected = self.collect_data_inside_time_window()
@@ -60,8 +61,9 @@ class MAJORITY_Thread(threading.Thread):
         for participation_activity in participation_activity_logs:
           spot_id = participation_activity.parking_spot.id
           data[spot_id] = { 'spot_id': spot_id, 'available': 0, 'unavailable': 0, 'total_participants': 0}
+        print(data)
 
-        time_window_tr = datetime.now() - timedelta(seconds=PROCESSING_TIME_WINDOW + PROCESSING_INTERVAL)
+        time_window_tr = datetime.now() - timedelta(seconds=PROCESSING_TIME_WINDOW)
         participation_in_treshold_logs = Participation.objects.filter(ts_update__gt=time_window_tr).all()
         for participation_in_treshold in participation_in_treshold_logs:
           spot_id = participation_in_treshold.parking_spot.id
@@ -82,7 +84,7 @@ class MAJORITY_Thread(threading.Thread):
           majority = data['available'] - data['unavailable']
           total = data['total_participants']
           confidence_level = 1
-          parking_status = None
+          parking_status = 0
 
           if total > 0:
             if majority > 0:
@@ -104,7 +106,7 @@ class MAJORITY_Thread(threading.Thread):
                 parking_status = -1
 
           current_parking_spot_data = ParkingSpot.objects.filter(id=data['spot_id']).first()
-          if parking_status is not None and current_parking_spot_data.parking_status != parking_status:
+          if current_parking_spot_data.parking_status != parking_status:
             ts_latest = datetime.now()
 
             history = ParkingSpotHistory(
@@ -131,16 +133,43 @@ class MAJORITY_Thread(threading.Thread):
             current_parking_spot_data.save()
 
             # TODO: BROADCAST CHANGES
-            self.broadcast_changes(current_parking_spot_data)
+            self.broadcast_parking_spot_changes_with_topic_zone_token(current_parking_spot_data)
 
-    def broadcast_parking_spot_changes(self, parking_spot):
-        
-        pass
+    def broadcast_parking_spot_changes_with_topic_zone_token(self, parking_spot):
+        token = parking_spot.zone.token
+        tmp = {  
+          "status": "OK", 
+          "path": "/api/zones/"+  str(parking_spot.zone.id)  +"/spots/" + str(parking_spot.id), 
+          "msg": "Broadcast OK", 
+          "data": {
+            "id": parking_spot.id, 
+            "name": parking_spot.name, 
+            "ts_register": parking_spot.ts_register.isoformat(),
+            "ts_update": parking_spot.ts_update.isoformat(),
+            "registrar_uuid": parking_spot.registrar_uuid,
+            "longitude": parking_spot.longitude,
+            "latitude": parking_spot.latitude,
+            "vote_available": parking_spot.vote_available,
+            "vote_unavailable": parking_spot.vote_unavailable,
+            "confidence_level": parking_spot.confidence_level,
+            "parking_status": parking_spot.parking_status,
+            "zone_id": parking_spot.zone.id
+          }
+        }
+        send_data = json.dumps(tmp)
+        print("TO TOKEN: "+ token)
+        print(send_data)
+        self.channel.basic_publish(exchange='amq.topic', routing_key=token, body=send_data)
 
     def run(self):
         while True:
+          connection = pika.BlockingConnection(parameters)
+          self.channel = connection.channel()
+
           print(datetime.now().strftime("%Y-%m-%d %H:%M:%s"))
           self.calculate_parking_log()
+          self.channel.close()
+          connection.close()          
           time.sleep(PROCESSING_INTERVAL)
           # Check every 30 seconds interval to get majority score
 
@@ -149,17 +178,24 @@ majority_thread.daemon = True
 majority_thread.start()
 
 
-# class AMQP_Publish_Time_Thread(threading.Thread):
-#     channel = None
-#     def run(self):
-#         while True:
-#           message = datetime.now().strftime("%c")
-#           try:
-#             self.channel.basic_publish(exchange='amq.topic', routing_key='time', body=message)
-#           except:
-#             print("Some Publish Error, skip this Time loop process")
+class AMQP_Publish_Time_Thread(threading.Thread):
+    channel = None
+    def run(self):
+        connection = pika.BlockingConnection(parameters)
+        channel = connection.channel()
+        while True:
+          message = datetime.now().strftime("%c")
+          try:
+            print(message)
+            channel.basic_publish(exchange='amq.topic', routing_key='time', body=message)
+          except:
+            print("Some Publish Error, skip this Time loop process")
           
-#           time.sleep(1)
+          time.sleep(1)
+
+publish_time_thread = AMQP_Publish_Time_Thread()
+publish_time_thread.daemon = True
+publish_time_thread.start()      
 
 # class AMQP_Publish_Parking_Slots_thread(threading.Thread):
 #     channel = None

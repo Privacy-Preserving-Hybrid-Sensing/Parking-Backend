@@ -66,9 +66,10 @@ For other HTTP code response, means as is.
 | 5 | [GET /api/zones/*zone_id*/spots/*spot_id*](#get-apizonesintzone_idspotsintspot_id)| Getting specific parking spots based on Parking Zone ID. |
 | 6 | [GET /api/zones/*zone_id*/subscribe](#get-apizonesintzone_idsubscribe)| Subscribe specific parking zone. |
 | 7 | [GET /api/profile/creditbalance](#get-apiprofilecreditbalance) | Get credit participation balance |
-| 8 | [GET /api/profile/participation/*days_ago*](#get-apiprofileparticipationintdays_ago) | Get participation history |
-| 9 | [POST /api/participate/*status*/*spot_id*](#post-apiparticipateintzone_idintspot_idstringstatus) | Participate crowd source parking spot information |
-| 10 | [POST /api/profile/register/*email*](#post-apiprofileregisterstringemail) | Bind email to user's subscriber UUID |
+| 8 | [GET /api/profile/participation/latest](#get-apiprofileparticipationlatest) | Get latest participation history (in evaluation treshold, eg: 5 min) |
+| 9 | [GET /api/profile/participation/*days_ago*](#get-apiprofileparticipationintdays_ago) | Get participation history |
+| 10 | [POST /api/participate/*status*/*spot_id*](#post-apiparticipateintzone_idintspot_idstringstatus) | Participate crowd source parking spot information |
+| 11 | [POST /api/profile/register/*email*](#post-apiprofileregisterstringemail) | Bind email to user's subscriber UUID |
 
 #### `GET /api/zones/all`
 response:
@@ -76,6 +77,7 @@ response:
 [{  
   "id": int,
   "subscribed": boolean,
+  "subscription_token": string,
   "name": string,
   "description": string,
   "center_longitude": string,
@@ -100,6 +102,7 @@ Response:
 {  
   "id": int,
   "subscribed": boolean,
+  "subscription_token": string,
   "name": string,
   "description": string,
   "center_longitude": string,
@@ -124,6 +127,7 @@ Response:
 [{  
   "id": int,
   "subscribed": boolean,
+  "subscription_token": string,
   "name": string,
   "description": string,
   "center_longitude": string,
@@ -197,11 +201,25 @@ Response:
 Response:
 ```javascript
 {
-  "credit_incentive": int,
-  "credit_charged": int,
-  "credit_balance": int
+  "incentive": int,
+  "charged": int,
+  "balance": int
 }
 ```
+
+#### `GET /api/profile/participations/latest`
+Response:
+```javascript
+[{
+  "id": int,
+  "ts_update": int,
+  "zone_id": int,
+  "spot_id": int,
+  "participation_value": int,
+  "incentive_processed": boolean,
+  "incentive_value": int
+}]
+
 
 #### `GET /api/profile/participations/<int:days_ago>`
 Response:
