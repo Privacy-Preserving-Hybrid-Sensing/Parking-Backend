@@ -13,6 +13,8 @@ import time
 from django.db.models.functions import Cast
 from django.db.models import TextField
 from .amqppublisher import AMQPPublisher
+from django.db.models import Avg, Max, Min, Sum
+
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -21,7 +23,7 @@ env = environ.Env()
 environ.Env.read_env(BASE_DIR + "/.env")  # reading .env file
 
 PROCESSING_TIME_WINDOW = 300    # IN SECONDS (300 seconds => 5 minutes)
-PROCESSING_INTERVAL = 3        # IN SECONDS
+PROCESSING_INTERVAL = 5        # IN SECONDS
 
 
 # DEFAULT_PARTICIPANT_TO_SERVER_ROUTING_KEY = "PARTICIPANT_TO_SERVER"
@@ -54,17 +56,17 @@ class MAJORITY_Thread(threading.Thread):
         self.decide_parking_status(data_collected)
 
     def collect_data_inside_time_window(self):
-        time_window_ev = datetime.now() - timedelta(seconds=PROCESSING_TIME_WINDOW + PROCESSING_INTERVAL)
+        time_window_tr_pending = datetime.now() - timedelta(seconds=PROCESSING_INTERVAL)
+        time_window_ev = datetime.now() - timedelta(seconds=PROCESSING_TIME_WINDOW + (PROCESSING_INTERVAL * 2))
         data = {}
 
-        participation_activity_logs = Participation.objects.filter(ts_update__gt=time_window_ev).all()
+        participation_activity_logs = Participation.objects.filter(ts_update__gt=time_window_ev, ts_update__lt=time_window_tr_pending).all()
         for participation_activity in participation_activity_logs:
           spot_id = participation_activity.parking_spot.id
           data[spot_id] = { 'spot_id': spot_id, 'available': 0, 'unavailable': 0, 'total_participants': 0}
-        print(data)
 
-        time_window_tr = datetime.now() - timedelta(seconds=PROCESSING_TIME_WINDOW)
-        participation_in_treshold_logs = Participation.objects.filter(ts_update__gt=time_window_tr).all()
+        time_window_tr = datetime.now() - timedelta(seconds=PROCESSING_TIME_WINDOW + PROCESSING_INTERVAL)
+        participation_in_treshold_logs = Participation.objects.filter(ts_update__gt=time_window_tr, ts_update__lt=time_window_tr_pending).all()
         for participation_in_treshold in participation_in_treshold_logs:
           spot_id = participation_in_treshold.parking_spot.id
           availability_value = participation_in_treshold.participation_value
@@ -75,107 +77,189 @@ class MAJORITY_Thread(threading.Thread):
             data[spot_id]['available'] += 1
           data[spot_id]['total_participants'] += 1
 
-        print(data)
         return data
 
     def decide_parking_status(self, data_collected):
         for spot_id in data_collected:
-          data = data_collected[spot_id]
-          majority = data['available'] - data['unavailable']
-          total = data['total_participants']
-          confidence_level = 1
-          parking_status = 0
+            data = data_collected[spot_id]
+            majority = data['available'] - data['unavailable']
+            total = data['total_participants']
+            confidence_level = 1
+            parking_status = 0
 
-          if total > 0:
-            if majority > 0:
-              confidence_level = data['available'] / total
-              if confidence_level > 0.7:
-                parking_status = 3
-              elif confidence_level > 0.4:
-                parking_status = 2
-              elif confidence_level > 0.1:
-                parking_status = 1
+            if total > 0:
+                if majority > 0:
+                    confidence_level = data['available'] / total
+                    if confidence_level > 0.7:
+                       parking_status = 3
+                    elif confidence_level > 0.4:
+                        parking_status = 2
+                    elif confidence_level > 0.1:
+                        parking_status = 1
 
-            elif majority < 0:
-              confidence_level = data['unavailable'] / total
-              if confidence_level > 0.7:
-                parking_status = -3
-              elif confidence_level > 0.4:
-                parking_status = -2
-              elif confidence_level > 0.1:
-                parking_status = -1
+                elif majority < 0:
+                    confidence_level = data['unavailable'] / total
+                    if confidence_level > 0.7:
+                        parking_status = -3
+                    elif confidence_level > 0.4:
+                        parking_status = -2
+                    elif confidence_level > 0.1:
+                        parking_status = -1
 
-          current_parking_spot_data = ParkingSpot.objects.filter(id=data['spot_id']).first()
-          if current_parking_spot_data.parking_status != parking_status:
-            ts_latest = datetime.now()
+            current_parking_spot_data = ParkingSpot.objects.filter(id=data['spot_id']).first()
+            if current_parking_spot_data.parking_status != parking_status:
+                ts_latest = datetime.now()
 
-            history = ParkingSpotHistory(
-              name = current_parking_spot_data.name,
-              ts_previous = current_parking_spot_data.ts_update,
-              ts_latest = ts_latest,
-              registrar_uuid = current_parking_spot_data.registrar_uuid,
-              longitude = current_parking_spot_data.longitude,
-              latitude = current_parking_spot_data.latitude,
-              vote_available = data['available'],
-              vote_unavailable = data['unavailable'],
-              confidence_level = confidence_level,
-              parking_status = parking_status,
-              parking_spot = current_parking_spot_data,
-              zone = current_parking_spot_data.zone
-            )
-            history.save()
+                history = ParkingSpotHistory(
+                    name = current_parking_spot_data.name,
+                    ts_previous = current_parking_spot_data.ts_update,
+                    ts_latest = ts_latest,
+                    registrar_uuid = current_parking_spot_data.registrar_uuid,
+                    longitude = current_parking_spot_data.longitude,
+                    latitude = current_parking_spot_data.latitude,
+                    vote_available = data['available'],
+                    vote_unavailable = data['unavailable'],
+                    confidence_level = confidence_level,
+                    parking_status = parking_status,
+                    parking_spot = current_parking_spot_data,
+                    zone = current_parking_spot_data.zone
+                  )
+                history.save()
 
-            current_parking_spot_data.vote_available = data['available']
-            current_parking_spot_data.vote_unavailable = data['unavailable']
-            current_parking_spot_data.confidence_level = confidence_level
-            current_parking_spot_data.parking_status = parking_status
-            current_parking_spot_data.ts_update = ts_latest
-            current_parking_spot_data.save()
-
-          self.broadcast_parking_spot_changes_with_topic_zone_token(current_parking_spot_data)
-
-    def broadcast_parking_spot_changes_with_topic_zone_token(self, parking_spot):
-        token = parking_spot.zone.token
-        tmp = {  
-          "status": "OK", 
-          "path": "/api/zones/"+  str(parking_spot.zone.id)  +"/spots/" + str(parking_spot.id), 
-          "msg": "Broadcast OK", 
-          "data": {
-            "id": parking_spot.id, 
-            "name": parking_spot.name, 
-            "ts_register": parking_spot.ts_register.isoformat(),
-            "ts_update": parking_spot.ts_update.isoformat(),
-            "registrar_uuid": parking_spot.registrar_uuid,
-            "longitude": parking_spot.longitude,
-            "latitude": parking_spot.latitude,
-            "vote_available": parking_spot.vote_available,
-            "vote_unavailable": parking_spot.vote_unavailable,
-            "confidence_level": parking_spot.confidence_level,
-            "parking_status": parking_spot.parking_status,
-            "zone_id": parking_spot.zone.id
-          }
-        }
-        send_data = json.dumps(tmp)
-        print("TO TOKEN: "+ token)
-        print(send_data)
-        self.channel.basic_publish(exchange='amq.topic', routing_key=token, body=send_data)
+                current_parking_spot_data.vote_available = data['available']
+                current_parking_spot_data.vote_unavailable = data['unavailable']
+                current_parking_spot_data.confidence_level = confidence_level
+                current_parking_spot_data.parking_status = parking_status
+                current_parking_spot_data.ts_update = ts_latest
+                current_parking_spot_data.save()
 
     def run(self):
         while True:
-          connection = pika.BlockingConnection(parameters)
-          self.channel = connection.channel()
 
-          print(datetime.now().strftime("%Y-%m-%d %H:%M:%s"))
-          self.calculate_parking_log()
-          self.channel.close()
-          connection.close()          
-          time.sleep(PROCESSING_INTERVAL)
-          # Check every 30 seconds interval to get majority score
+            print(datetime.now().strftime("%Y-%m-%d %H:%M:%s"))
+            self.calculate_parking_log()
+            time.sleep(PROCESSING_INTERVAL)
+            # Check every 30 seconds interval to get majority score
 
 majority_thread = MAJORITY_Thread()
 majority_thread.daemon = True
 majority_thread.start()
 
+
+class CREDIT_Thread(threading.Thread):
+    channel = None
+    def calculate_participation_log(self):
+        time_window_tr = datetime.now() - timedelta(seconds=PROCESSING_INTERVAL )
+        list_participant_uuid = {}
+
+        participation_unprocessed = Participation.objects.filter(ts_update__lt=time_window_tr, incentive_processed=False).all()
+        for participation in participation_unprocessed:
+            ts_update = participation.ts_update
+            participant_uuid = participation.participant_uuid
+            participation_value = participation.participation_value
+            parking_spot = participation.parking_spot
+            history = ParkingSpotHistory.objects.filter(parking_spot=parking_spot, ts_previous__lt=ts_update, ts_latest__gt=ts_update).first()
+            if history is not None:
+                history_parking_status = history.parking_status
+                credit_cnt = 0
+                if history_parking_status > 0 and participation_value > 0:
+                    credit_cnt = 1
+                elif history_parking_status < 0 and participation_value < 0:
+                    credit_cnt = 1
+
+                participation.incentive_processed = True
+                participation.incentive_value = 1
+                participation.save()
+
+
+            if participant_uuid not in list_participant_uuid:
+                list_participant_uuid[participant_uuid] = 1
+            else:
+                list_participant_uuid[participant_uuid] += 1
+
+        self.broadcast_credit_balance_to_topic_participant_uuid(list_participant_uuid)
+
+    def broadcast_credit_balance_to_topic_participant_uuid(self, list_participant_uuid):
+
+        for participant_uuid in list(list_participant_uuid):
+            data_participation = Participation.objects.filter(participant_uuid=participant_uuid, incentive_processed=True).aggregate(Sum('incentive_value'))
+            incentive = 0
+            if data_participation['incentive_value__sum'] is not None:
+              incentive += data_participation['incentive_value__sum']
+
+            data_charged = Subscription.objects.filter(subscriber_uuid=participant_uuid).aggregate(Sum('charged'))
+            charged = 0
+            if data_charged['charged__sum'] is not None:
+              charged += data_charged['charged__sum']
+
+            balance = incentive - charged
+
+            tmp = {  
+              "status": "OK", 
+              "path": "/api/profile/creditbalance",
+              "msg": "Broadcast Credit Balance OK", 
+              "data": { 
+                  'balance' : balance, 
+                  'incentive': incentive, 
+                  'charged': charged
+              }
+            }
+            send_data = json.dumps(tmp)
+            print("TO TOKEN: "+ participant_uuid)
+            print(send_data)
+            self.channel.basic_publish(exchange='amq.topic', routing_key=participant_uuid, body=send_data)
+
+    def broadcast_parking_spot_changes(self):
+
+        parking_histories = ParkingSpotHistory.objects.filter(notify_status=False).order_by('ts_latest').all()
+
+        for history in parking_histories:
+            parking_spot = history.parking_spot
+            token = parking_spot.zone.token
+            tmp = {  
+              "status": "OK", 
+              "path": "/api/zones/"+  str(parking_spot.zone.id)  +"/spots/" + str(parking_spot.id), 
+              "msg": "Broadcast OK", 
+              "data": {
+                "id": parking_spot.id, 
+                "name": parking_spot.name, 
+                "ts_register": parking_spot.ts_register.isoformat(),
+                "ts_update": parking_spot.ts_update.isoformat(),
+                "registrar_uuid": parking_spot.registrar_uuid,
+                "longitude": parking_spot.longitude,
+                "latitude": parking_spot.latitude,
+                "vote_available": parking_spot.vote_available,
+                "vote_unavailable": parking_spot.vote_unavailable,
+                "confidence_level": parking_spot.confidence_level,
+                "parking_status": parking_spot.parking_status,
+                "zone_id": parking_spot.zone.id
+              }
+            }
+            send_data = json.dumps(tmp)
+            print("TO TOKEN: "+ token)
+            print(send_data)
+            self.channel.basic_publish(exchange='amq.topic', routing_key=token, body=send_data)
+            history.notify_status=True
+            history.save()
+
+
+    def run(self):
+        while True:
+
+            connection = pika.BlockingConnection(parameters)
+            self.channel = connection.channel()
+            print(datetime.now().strftime("%Y-%m-%d %H:%M:%s"))
+            self.broadcast_parking_spot_changes()
+            self.calculate_participation_log()
+            time.sleep(PROCESSING_INTERVAL)
+            
+            # Check every 30 seconds interval to get credit
+            self.channel.close()
+            connection.close()          
+
+credit_thread = CREDIT_Thread()
+credit_thread.daemon = True
+credit_thread.start()
 
 class AMQP_Publish_Time_Thread(threading.Thread):
     channel = None
@@ -192,9 +276,9 @@ class AMQP_Publish_Time_Thread(threading.Thread):
           
           time.sleep(1)
 
-publish_time_thread = AMQP_Publish_Time_Thread()
-publish_time_thread.daemon = True
-publish_time_thread.start()      
+# publish_time_thread = AMQP_Publish_Time_Thread()
+# publish_time_thread.daemon = True
+# publish_time_thread.start()      
 
 # class AMQP_Publish_Parking_Slots_thread(threading.Thread):
 #     channel = None

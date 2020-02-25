@@ -32,7 +32,7 @@ class ParkingSpotHistoryResource(resources.ModelResource):
     model = ParkingSpotHistory
 class ParkingSpotHistoryAdmin(ImportExportModelAdmin):
   resource_class = ParkingSpotHistoryResource
-  list_display = ['name', 'ts_previous', 'ts_latest','registrar_uuid','longitude','latitude','vote_available','vote_unavailable','confidence_level','parking_status', 'parking_spot', 'zone']
+  list_display = ['name', 'ts_previous', 'ts_latest','registrar_uuid','longitude','latitude','vote_available','vote_unavailable','confidence_level','parking_status', 'parking_spot', 'zone', 'notify_status']
 
 class SubscriptionResource(resources.ModelResource):
   class Meta:
@@ -53,7 +53,7 @@ class ParticipationResource(resources.ModelResource):
     model = Participation
 class ParticipationAdmin(ImportExportModelAdmin):
   resource_class = ParticipationResource
-  list_display = ['ts_update','participant_uuid', 'participation_value', 'incentive_processed','parking_spot', 'incentive_value']
+  list_display = ['ts_update','participant_uuid', 'participation_value', 'incentive_processed','parking_spot', 'incentive_value', 'ts_incentive']
 
 
 

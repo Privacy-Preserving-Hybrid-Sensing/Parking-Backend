@@ -103,6 +103,7 @@ class ParkingSpotHistory(models.Model):
   parking_status = models.IntegerField(default=0)
   parking_spot = models.ForeignKey(ParkingSpot, on_delete=models.CASCADE, blank=True, null=True)
   zone = models.ForeignKey(ParkingZone, on_delete=models.CASCADE, blank=True, null=True)
+  notify_status = models.BooleanField(default=False)
   class Meta:
       unique_together = (('parking_spot', 'ts_latest'),)
       verbose_name = 'Parking Spot History'
@@ -131,6 +132,7 @@ class ParkingAvailabilityLog(models.Model):
 class Participation(models.Model):
   ts_create = models.DateTimeField(default=now)
   ts_update = models.DateTimeField(default=now)
+  ts_incentive = models.DateTimeField(default=now)
   participant_uuid = models.CharField(max_length=100, db_index=True)
   participation_value = models.FloatField()
   incentive_processed = models.BooleanField(default=False)

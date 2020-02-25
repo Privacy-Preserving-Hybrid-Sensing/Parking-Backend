@@ -52,7 +52,7 @@ def zones_id(request, zone_id):
       return generate_dict_response_err(request, msg)
 
     tmp = get_parking_zone_geopoints(zone, subscriber_uuid)
-    msg = "Get All Zones OK"
+    msg = "Get Zone " + str(zone_id) + " OK"
     return generate_dict_response_ok(request, msg, tmp)
 
 @csrf_exempt
