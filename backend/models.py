@@ -134,6 +134,7 @@ class Participation(models.Model):
   ts_update = models.DateTimeField(default=now)
   ts_incentive = models.DateTimeField(default=now)
   participant_uuid = models.CharField(max_length=100, db_index=True)
+  previous_value = models.FloatField()
   participation_value = models.FloatField()
   incentive_processed = models.BooleanField(default=False)
   parking_spot = models.ForeignKey(ParkingSpot, on_delete=models.CASCADE, blank=True, null=True)
@@ -147,10 +148,11 @@ class Participation(models.Model):
     participation_data = Participation.objects.filter(ts_update__gt=time_treshold, parking_spot=parking_spot, participant_uuid=participant_uuid).first()
 
     if participation_data == None:
-      participation_data = Participation(participant_uuid=participant_uuid, participation_value=participation_value, parking_spot=parking_spot)
+      participation_data = Participation(participant_uuid=participant_uuid, participation_value=participation_value, parking_spot=parking_spot, previous_value=parking_spot.parking_status)
       participation_data.save()
     else:
       participation_data.ts_update = datetime.now()
+      participation_data.previous_value = parking_spot.parking_status
       participation_data.participation_value = participation_value
       participation_data.incentive_processed = False
       participation_data.incentive_value = 0

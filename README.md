@@ -217,6 +217,7 @@ Response:
   "zone_name": string,
   "spot_id": int,
   "spot_name": string,
+  "previous_value": int,
   "participation_value": int,
   "incentive_processed": boolean,
   "incentive_value": int
@@ -233,6 +234,7 @@ Response:
   "zone_name": string,
   "spot_id": int,
   "spot_name": string,
+  "previous_value": int,
   "participation_value": int,
   "incentive_processed": boolean,
   "incentive_value": int
@@ -249,6 +251,7 @@ Response:
   "zone_name": string,
   "spot_id": int,
   "spot_name": string,
+  "previous_value": int,
   "participation_value": int,
   "incentive_processed": boolean,
   "incentive_value": int

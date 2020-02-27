@@ -306,6 +306,7 @@ def participate_zone_spot_status(request, zone_id, spot_id, str_status):
       'zone_name': data.parking_spot.zone.name,
       'spot_id': data.parking_spot.id,
       'spot_name': data.parking_spot.name,
+      'previous_value': data.previous_value,
       'participation_value': data.participation_value,
       'incentive_value': data.incentive_value,
       'incentive_processed': data.incentive_processed
@@ -333,6 +334,7 @@ def profile_participations_latest(request):
         'zone_name': data.parking_spot.zone.name,
         'spot_id': data.parking_spot.id,
         'spot_name': data.parking_spot.name,
+        'previous_value': data.previous_value,
         'participation_value': data.participation_value,
         'incentive_value': data.incentive_value,
         'incentive_processed': data.incentive_processed
@@ -360,6 +362,7 @@ def profile_participations_last_num_participation(request, last_num_participatio
         'zone_name': data.parking_spot.zone.name,
         'spot_id': data.parking_spot.id,
         'spot_name': data.parking_spot.name,
+        'previous_value': data.previous_value,
         'participation_value': data.participation_value,
         'incentive_value': data.incentive_value,
         'incentive_processed': data.incentive_processed
