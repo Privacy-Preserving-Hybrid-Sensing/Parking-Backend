@@ -345,12 +345,11 @@ def profile_participations_latest(request):
 
 @csrf_exempt
 @required_field  
-def profile_participations_days_ago(request, days_ago):
+def profile_participations_last_num_participation(request, last_num_participation):
     subscriber_uuid = request.headers['Subscriber-Uuid']
     # Assumption: for 1 subscriber, there's only 1 zone subscription for 1 day
-    time_treshold = datetime.now() - timedelta(days=days_ago)
 
-    participant_datas = Participation.objects.filter(participant_uuid=subscriber_uuid, ts_create__gt=time_treshold).order_by('ts_create').all()
+    participant_datas = Participation.objects.filter(participant_uuid=subscriber_uuid).order_by('-ts_create').all()[:last_num_participation]
     ret = []
     for data in participant_datas:
       tmp = {
