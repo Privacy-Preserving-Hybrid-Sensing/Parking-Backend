@@ -126,14 +126,14 @@ class MAJORITY_Thread(threading.Thread):
                   )
                 history.save()
 
-                current_parking_spot_data.vote_available = data['available']
-                current_parking_spot_data.vote_unavailable = data['unavailable']
-                current_parking_spot_data.confidence_level = confidence_level
-                current_parking_spot_data.parking_status = parking_status
-                current_parking_spot_data.ts_update = ts_latest
-                current_parking_spot_data.save()
-                current_parking_spot_data.zone.ts_update = datetime.now()
-                current_parking_spot_data.zone.save()
+            current_parking_spot_data.vote_available = data['available']
+            current_parking_spot_data.vote_unavailable = data['unavailable']
+            current_parking_spot_data.confidence_level = confidence_level
+            current_parking_spot_data.parking_status = parking_status
+            current_parking_spot_data.ts_update = ts_latest
+            current_parking_spot_data.save()
+            current_parking_spot_data.zone.ts_update = datetime.now()
+            current_parking_spot_data.zone.save()
 
     def run(self):
         while True:
