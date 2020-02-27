@@ -134,7 +134,7 @@ class Participation(models.Model):
   ts_update = models.DateTimeField(default=now)
   ts_incentive = models.DateTimeField(default=now)
   participant_uuid = models.CharField(max_length=100, db_index=True)
-  previous_value = models.FloatField()
+  previous_value = models.FloatField(default=0)
   participation_value = models.FloatField()
   incentive_processed = models.BooleanField(default=False)
   parking_spot = models.ForeignKey(ParkingSpot, on_delete=models.CASCADE, blank=True, null=True)
