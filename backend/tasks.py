@@ -107,8 +107,8 @@ class MAJORITY_Thread(threading.Thread):
                         parking_status = -1
 
             current_parking_spot_data = ParkingSpot.objects.filter(id=data['spot_id']).first()
+            ts_latest = datetime.now()
             if current_parking_spot_data.parking_status != parking_status:
-                ts_latest = datetime.now()
 
                 history = ParkingSpotHistory(
                     name = current_parking_spot_data.name,
