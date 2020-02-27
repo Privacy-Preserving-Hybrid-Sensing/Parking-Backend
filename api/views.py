@@ -237,25 +237,6 @@ def generate_dict_response_err(request, msg):
 def generate_dict_response_ok(request, msg, data):
     return {'status': 'OK', 'path': request.path, 'msg': msg, 'data': data}
 
-# def parking_spots_get_all(request):
-
-  # ts_register = models.DateTimeField(default=now)
-  # ts_update = models.DateTimeField(default=now)
-  # registrar_uuid = models.CharField(max_length=100)
-  # longitude = models.CharField(max_length=100, default="0.0")
-  # latitude = models.CharField(max_length=100, default="0.0")
-  # voting_available = models.FloatField(default=0)
-  # voting_unavailable = models.FloatField(default=0)
-  # confidence_level = models.FloatField(default=0)
-  # status = models.IntegerField(default=0)
-  # zone = models.ForeignKey(ParkingZone, on_delete=models.CASCADE, blank=True, null=True)
-
-#     parking_slots = ParkingSpot.objects.order_by('id').values('id', 'ts_update', 'longitude', 'latitude', 'status', 'confidence_level')
-#     return generate_dict_response_ok(request, list(parking_slots))
-
-# def parking_spots_get_id(request, id):
-#     parking_spots = ParkingSpot.objects.filter(id=id).values('id', 'ts_update', 'longitude', 'latitude', 'status', 'confidence_level')
-#     return generate_dict_response_ok(request, list(parking_spots))
 
 @csrf_exempt
 @required_field  

@@ -132,6 +132,8 @@ class MAJORITY_Thread(threading.Thread):
                 current_parking_spot_data.parking_status = parking_status
                 current_parking_spot_data.ts_update = ts_latest
                 current_parking_spot_data.save()
+                current_parking_spot_data.zone.ts_update = datetime.now()
+                current_parking_spot_data.zone.save()
 
     def run(self):
         while True:
@@ -252,7 +254,7 @@ class CREDIT_Thread(threading.Thread):
             self.broadcast_parking_spot_changes()
             self.calculate_participation_log()
             time.sleep(PROCESSING_INTERVAL)
-            
+
             # Check every 30 seconds interval to get credit
             self.channel.close()
             connection.close()          
