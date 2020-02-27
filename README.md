@@ -67,7 +67,7 @@ For other HTTP code response, means as is.
 | 6 | [GET /api/zones/*zone_id*/subscribe](#get-apizonesintzone_idsubscribe)| Subscribe specific parking zone. |
 | 7 | [GET /api/profile/creditbalance](#get-apiprofilecreditbalance) | Get credit participation balance |
 | 8 | [GET /api/profile/participation/latest](#get-apiprofileparticipationlatest) | Get latest participation history (in evaluation treshold, eg: 5 min) |
-| 9 | [GET /api/profile/participation/*days_ago*](#get-apiprofileparticipationintdays_ago) | Get participation history |
+| 9 | [GET /api/profile/participation/*last_num_participation*](#get-apiprofileparticipationintlast_num_participation) | Get participation history |
 | 10 | [GET /api/participate/*zone_id*/*spot_id*/*status*](#post-apiparticipateintzone_idintspot_idstringstatus) | Participate crowd source parking spot information |
 | 11 | [GET /api/profile/register/*email*](#post-apiprofileregisterstringemail) | Bind email to user's subscriber UUID |
 
@@ -214,21 +214,25 @@ Response:
   "id": int,
   "ts_update": int,
   "zone_id": int,
+  "zone_name": string,
   "spot_id": int,
+  "spot_name": string,
   "participation_value": int,
   "incentive_processed": boolean,
   "incentive_value": int
 }]
 
 
-#### `GET /api/profile/participations/<int:days_ago>`
+#### `GET /api/profile/participations/<int:last_num_participation>`
 Response:
 ```javascript
 [{
   "id": int,
   "ts_update": int,
   "zone_id": int,
+  "zone_name": string,
   "spot_id": int,
+  "spot_name": string,
   "participation_value": int,
   "incentive_processed": boolean,
   "incentive_value": int
@@ -242,7 +246,9 @@ Response:
   "id": int,
   "ts_update": int,
   "zone_id": int,
+  "zone_name": string,
   "spot_id": int,
+  "spot_name": string,
   "participation_value": int,
   "incentive_processed": boolean,
   "incentive_value": int
