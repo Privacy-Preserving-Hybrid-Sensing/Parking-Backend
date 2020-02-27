@@ -366,7 +366,7 @@ def profile_participations_last_num_participation(request, last_num_participatio
       }
       ret.append(tmp)
 
-    msg = "Participation from " + str(days_ago) + " days ago"
+    msg = "Participation cnt " + str(last_num_participation) + " OK"
     return generate_dict_response_ok(request, msg, ret)
 
 @csrf_exempt
