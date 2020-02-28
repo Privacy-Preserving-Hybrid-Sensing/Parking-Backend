@@ -65,7 +65,7 @@ For other HTTP code response, means as is.
 | 4 | [GET /api/zones/*zone_id*/spots/all](#get-apizonesintzone_idspotsall)| Getting all parking spots based on Parking Zone ID. |
 | 5 | [GET /api/zones/*zone_id*/spots/*spot_id*](#get-apizonesintzone_idspotsintspot_id)| Getting specific parking spots based on Parking Zone ID. |
 | 6 | [GET /api/zones/*zone_id*/subscribe](#get-apizonesintzone_idsubscribe)| Subscribe specific parking zone. |
-| 7 | [GET /api/profile/creditbalance](#get-apiprofilecreditbalance) | Get credit participation balance |
+| 7 | [GET /api/profile/summary](#get-apiprofilesummary) | Get summary (credit balance, participation, subsription, etc) |
 | 8 | [GET /api/profile/participation/latest](#get-apiprofileparticipationlatest) | Get latest participation history (in evaluation treshold, eg: 5 min) |
 | 9 | [GET /api/profile/participation/*last_num_participation*](#get-apiprofileparticipationintlast_num_participation) | Get participation history |
 | 10 | [GET /api/participate/*zone_id*/*spot_id*/*status*](#post-apiparticipateintzone_idintspot_idstringstatus) | Participate crowd source parking spot information |
@@ -197,10 +197,11 @@ Response:
 }
 ```
 
-#### `GET /api/profile/creditbalance`
+#### `GET /api/profile/summary`
 Response:
 ```javascript
 {
+  "participation": int,
   "incentive": int,
   "charged": int,
   "balance": int

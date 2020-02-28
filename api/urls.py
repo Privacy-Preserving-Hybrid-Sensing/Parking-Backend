@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import include, path, re_path
 from .views import summary_all
 from .views import zones_all, zones_id, zones_search_keyword, zones_id_spots_all, zones_id_spots_id, zones_id_subscribe
-from .views import profile_creditbalance, profile_participations_last_num_participation, profile_register_email, profile_participations_latest
+from .views import profile_summary, profile_participations_last_num_participation, profile_register_email, profile_participations_latest
 from .views import participate_zone_spot_status
 # from .views import parking_spots_get_all, parking_spots_get_id, parking_spots_search
 
@@ -15,7 +15,7 @@ urlpatterns = [
     path("zones/search/<str:keyword>", zones_search_keyword, name="zones_search_keyword"), ##
     path("zones/all", zones_all, name="zones_all"), ##
 
-    path("profile/creditbalance", profile_creditbalance, name="profile_creditbalance"),
+    path("profile/summary", profile_summary, name="profile_summary"),
     path("profile/participations/latest", profile_participations_latest, name="profile_participations_latest"),
     path("profile/participations/<int:last_num_participation>", profile_participations_last_num_participation, name="profile_participations_last_num_participation"),
     path("participate/<int:zone_id>/<int:spot_id>/<str:str_status>", participate_zone_spot_status, name="participate_zone_spot_status"),

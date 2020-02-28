@@ -196,14 +196,17 @@ class CREDIT_Thread(threading.Thread):
 
             balance = incentive - charged
 
+            cnt_participation = Participation.objects.filter(participant_uuid=participant_uuid).count()
+
             tmp = {  
               "status": "OK", 
-              "path": "/api/profile/creditbalance",
-              "msg": "Broadcast Credit Balance OK", 
+              "path": "/api/profile/summary",
+              "msg": "Broadcast Profile Summary OK", 
               "data": { 
-                  'balance' : balance, 
-                  'incentive': incentive, 
-                  'charged': charged
+                    'participation' : cnt_participation,
+                    'balance' : balance, 
+                    'incentive': incentive, 
+                    'charged': charged
               }
             }
             send_data = json.dumps(tmp)

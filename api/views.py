@@ -122,6 +122,12 @@ def zones_id_spots_all(request, zone_id):
     if parking_zone is None:
       return generate_dict_response_err(request, 'Zone ID: ' + str(zone_id) + ' Not Found')
 
+    subscriber_uuid = request.headers['Subscriber-Uuid']
+    current_subscription = Subscription.objects.filter(subscriber_uuid=subscriber_uuid, ts__date=date.today(), zone=parking_zone.id).first()
+
+    if current_subscription is None:
+      return generate_dict_response_err(request, 'Requires ' + str(parking_zone.credit_required) + " Credit to subscribe to " + parking_zone.name)
+
     parking_spots = ParkingSpot.objects.filter(zone=parking_zone).all()
     ret = []
     for parking_spot in parking_spots:
@@ -240,17 +246,22 @@ def generate_dict_response_ok(request, msg, data):
 
 @csrf_exempt
 @required_field  
-def profile_creditbalance(request):
+def profile_summary(request):
     subscriber_uuid = request.headers['Subscriber-Uuid']
     # Assumption: for 1 subscriber, there's only 1 zone subscription for 1 day
+    participation = get_participation(subscriber_uuid)
     incentive = get_incentive(subscriber_uuid)
     charged = get_charged(subscriber_uuid)
 
     balance = incentive - charged
-    tmp = { 'balance' : balance, 'incentive': incentive, 'charged': charged}
+    tmp = { 'participation': participation, 'balance' : balance, 'incentive': incentive, 'charged': charged}
 
     msg = "Profile Credit OK"
     return generate_dict_response_ok(request, msg, tmp)
+
+def get_participation(subscriber_uuid):
+    cnt_participation = Participation.objects.filter(participant_uuid=subscriber_uuid).count()
+    return cnt_participation
 
 def get_incentive(subscriber_uuid):
     data_participation = Participation.objects.filter(participant_uuid=subscriber_uuid, incentive_processed=True).aggregate(Sum('incentive_value'))

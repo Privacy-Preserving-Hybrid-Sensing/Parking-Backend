@@ -31,7 +31,7 @@ def required_field(function):
 
 
 def json_response(request, dictionary):
-    # print(dictionary)
+    print(dictionary)
     return JsonResponse(dictionary, safe=True)
 
 # def json_response_err(request, msg, trx_id):
