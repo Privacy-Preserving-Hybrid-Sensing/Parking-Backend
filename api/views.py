@@ -263,7 +263,17 @@ def get_participation(subscriber_uuid):
     cnt_participation = Participation.objects.filter(participant_uuid=subscriber_uuid).count()
     return cnt_participation
 
+def get_dummy_parking_spot():
+    spot = ParkingSpot.objects.filter(name='Free Credits').first()
+    return spot
+
 def get_incentive(subscriber_uuid):
+    participant_cnt = Participation.objects.filter(participant_uuid=subscriber_uuid).count()
+    if participant_cnt == 0:
+        dummy_spot = get_dummy_parking_spot()
+        free_credit = Participation(participant_uuid=subscriber_uuid, parking_spot=dummy_spot, incentive_processed=True, participation_value=0, incentive_value=100)
+        free_credit.save()
+
     data_participation = Participation.objects.filter(participant_uuid=subscriber_uuid, incentive_processed=True).aggregate(Sum('incentive_value'))
     incentive = 0
     if data_participation['incentive_value__sum'] is not None:
