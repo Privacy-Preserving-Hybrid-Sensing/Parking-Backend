@@ -23,7 +23,7 @@ env = environ.Env()
 environ.Env.read_env(BASE_DIR + "/.env")  # reading .env file
 
 PROCESSING_TIME_WINDOW = 300    # IN SECONDS (300 seconds => 5 minutes)
-PROCESSING_INTERVAL = 5        # IN SECONDS
+PROCESSING_INTERVAL = 10        # IN SECONDS
 
 
 # DEFAULT_PARTICIPANT_TO_SERVER_ROUTING_KEY = "PARTICIPANT_TO_SERVER"
