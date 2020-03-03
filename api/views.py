@@ -466,13 +466,7 @@ def profile_history_last_num_history(request, last_num_history):
           }
           ret.append(tmp)
 
-    # print(history_data)
     msg = "History cnt " + str(last_num_history) + " OK"
-    print("--------------------------------------")
-    print(ret)
-    print("--------------------------------------")
     reverse = ret[::-1]
-    print(reverse)
-    print("--------------------------------------")
 
-    return generate_dict_response_ok(request, msg, reverse)
+    return generate_dict_response_ok(request, msg, reverse[:last_num_history])
