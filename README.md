@@ -66,10 +66,9 @@ For other HTTP code response, means as is.
 | 5 | [GET /api/zones/*zone_id*/spots/*spot_id*](#get-apizonesintzone_idspotsintspot_id)| Getting specific parking spots based on Parking Zone ID. |
 | 6 | [GET /api/zones/*zone_id*/subscribe](#get-apizonesintzone_idsubscribe)| Subscribe specific parking zone. |
 | 7 | [GET /api/profile/summary](#get-apiprofilesummary) | Get summary (credit balance, participation, subsription, etc) |
-| 8 | [GET /api/profile/participation/latest](#get-apiprofileparticipationlatest) | Get latest participation history (in evaluation treshold, eg: 5 min) |
-| 9 | [GET /api/profile/participation/*last_num_participation*](#get-apiprofileparticipationintlast_num_participation) | Get participation history |
-| 10 | [GET /api/participate/*zone_id*/*spot_id*/*status*](#post-apiparticipateintzone_idintspot_idstringstatus) | Participate crowd source parking spot information |
-| 11 | [GET /api/profile/register/*email*](#post-apiprofileregisterstringemail) | Bind email to user's subscriber UUID |
+| 8 | [GET /api/profile/history/*last_num_participation*](#get-apiprofilehistoryintlast_num_history) | Get participation & subscription history |
+| 9 | [GET /api/participate/*zone_id*/*spot_id*/*status*](#post-apiparticipateintzone_idintspot_idstringstatus) | Participate crowd source parking spot information |
+| 10 | [GET /api/profile/register/*email*](#post-apiprofileregisterstringemail) | Bind email to user's subscriber UUID |
 
 #### `GET /api/zones/all`
 response:
@@ -208,11 +207,13 @@ Response:
 }
 ```
 
-#### `GET /api/profile/participations/latest`
+#### `GET /api/profile/history/<int:last_num_history>`
 Response:
 ```javascript
 [{
-  "id": int,
+  "id_history": int,
+  "id_participation": int,
+  "type": string,
   "ts_update": int,
   "zone_id": int,
   "zone_name": string,
@@ -222,23 +223,15 @@ Response:
   "participation_value": int,
   "incentive_processed": boolean,
   "incentive_value": int
-}]
-
-
-#### `GET /api/profile/participations/<int:last_num_participation>`
-Response:
-```javascript
-[{
-  "id": int,
-  "ts_update": int,
+},
+{
+  "id_history": int,
+  "id_subscription": int,
+  "type": string,
+  "ts_subscription": string,
   "zone_id": int,
   "zone_name": string,
-  "spot_id": int,
-  "spot_name": string,
-  "previous_value": int,
-  "participation_value": int,
-  "incentive_processed": boolean,
-  "incentive_value": int
+  "charged": int
 }]
 ```
 

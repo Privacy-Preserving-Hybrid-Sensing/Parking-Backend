@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.db.models import Avg, Max, Min, Sum
 from django.db.models import Q
-from backend.models import ParkingSpot, Participation, ParkingZone, ParkingZonePolygonGeoPoint, Subscription, ParkingAvailabilityLog, Profile
+from backend.models import ParkingSpot, Participation, ParkingZone, ParkingZonePolygonGeoPoint, Subscription, ParkingAvailabilityLog, Profile, History
 import json
 from django.core import serializers
 from django.forms.models import model_to_dict
@@ -71,11 +71,10 @@ def zones_all(request):
 
 def get_parking_zone_geopoints(zone, subscriber_uuid):
 
-    current_subscription = Subscription.objects.filter(subscriber_uuid=subscriber_uuid, ts__date=date.today(), zone=zone).first()
+    current_subscription = Subscription.objects.filter(subscriber_uuid=subscriber_uuid, ts_subscription__date=date.today(), zone=zone).first()
     if(current_subscription is None):
       if(zone.credit_required == 0):
-        current_subscription = Subscription(subscriber_uuid=subscriber_uuid, zone=zone, charged=0)
-        current_subscription.save()
+        current_subscription = Subscription.subscribe(subscriber_uuid=subscriber_uuid, zone=zone, charged=0)
 
     subscription_status = current_subscription is not None
 
@@ -123,7 +122,7 @@ def zones_id_spots_all(request, zone_id):
       return generate_dict_response_err(request, 'Zone ID: ' + str(zone_id) + ' Not Found')
 
     subscriber_uuid = request.headers['Subscriber-Uuid']
-    current_subscription = Subscription.objects.filter(subscriber_uuid=subscriber_uuid, ts__date=date.today(), zone=parking_zone.id).first()
+    current_subscription = Subscription.objects.filter(subscriber_uuid=subscriber_uuid, ts_subscription__date=date.today(), zone=parking_zone.id).first()
 
     if current_subscription is None:
       return generate_dict_response_err(request, 'Requires ' + str(parking_zone.credit_required) + " Credit to subscribe to " + parking_zone.name)
@@ -193,7 +192,7 @@ def zones_id_subscribe(request, zone_id):
       msg = "Parking Zone ID: " + str(zone_id) + " Not Found"
       return generate_dict_response_err(request, msg)
 
-    subscription = Subscription.objects.filter(subscriber_uuid=subscriber_uuid, zone=parking_zone, ts__date=date.today()).first()
+    subscription = Subscription.objects.filter(subscriber_uuid=subscriber_uuid, zone=parking_zone, ts_subscription__date=date.today()).first()
 
     incentive = get_incentive(subscriber_uuid)
     charged = get_charged(subscriber_uuid)
@@ -211,12 +210,11 @@ def zones_id_subscribe(request, zone_id):
 
     if subscription == None:
       msg = "Subscription OK"
-      subscription = Subscription(subscriber_uuid=subscriber_uuid, zone=parking_zone, charged=parking_zone.credit_required)
-      subscription.save()
+      subscription = Subscription.subscribe(subscriber_uuid=subscriber_uuid, zone=parking_zone, charged=parking_zone.credit_required)
 
     ret = {
       "id": subscription.id,
-      "ts": subscription.ts,
+      "ts_subscription": subscription.ts_subscription,
       "subscriber_uuid": subscription.subscriber_uuid,
       "subscription_token": parking_zone.token,
       "zone_id": subscription.zone.id,
@@ -265,6 +263,13 @@ def get_participation(subscriber_uuid):
 
 def get_dummy_parking_spot():
     spot = ParkingSpot.objects.filter(name='Free Credits').first()
+    if spot is None:
+        zone = ParkingZone.objects.filter(name="Free Credits").first()
+        if zone is None:
+            zone = ParkingZone(name="Free Credit", credit_required=0)
+            zone.save()
+        spot = ParkingSpot(name="Free Credits", zone=zone)
+        spot.save()
     return spot
 
 def get_incentive(subscriber_uuid):
@@ -273,6 +278,8 @@ def get_incentive(subscriber_uuid):
         dummy_spot = get_dummy_parking_spot()
         free_credit = Participation(participant_uuid=subscriber_uuid, parking_spot=dummy_spot, incentive_processed=True, participation_value=0, incentive_value=100)
         free_credit.save()
+        history = History(subscriber_uuid=subscriber_uuid, participation=free_credit )
+        history.save()
 
     data_participation = Participation.objects.filter(participant_uuid=subscriber_uuid, incentive_processed=True).aggregate(Sum('incentive_value'))
     incentive = 0
@@ -410,3 +417,62 @@ def profile_register_email(request, email):
       "validated": profile.validated
     }
     return generate_dict_response_ok(request, msg, [tmp])
+
+
+@csrf_exempt
+@required_field  
+def profile_history_last_num_history(request, last_num_history):
+    subscriber_uuid = request.headers['Subscriber-Uuid']
+    # Assumption: for 1 subscriber, there's only 1 zone subscription for 1 day
+
+    history_data = History.objects.filter(subscriber_uuid=subscriber_uuid).order_by('ts_history').all()
+    ret = []
+    balance = 0
+    for data in history_data:
+      if data.participation is not None:
+        participant_data = Participation.objects.filter(id=data.participation.id).first()
+        balance += participant_data.incentive_value
+        tmp = {
+          'id_history': data.id,
+          'id_participation': participant_data.id,
+          'type': 'participation',
+          'ts_create': participant_data.ts_create,
+          'ts_update': participant_data.ts_update,
+          'zone_id': participant_data.parking_spot.zone.id,
+          'zone_name': participant_data.parking_spot.zone.name,
+          'spot_id': participant_data.parking_spot.id,
+          'spot_name': participant_data.parking_spot.name,
+          'previous_value': participant_data.previous_value,
+          'participation_value': participant_data.participation_value,
+          'incentive_value': participant_data.incentive_value,
+          'incentive_processed': participant_data.incentive_processed,
+          'balance': balance
+        }
+        ret.append(tmp)
+
+      elif data.subscription is not None:
+        subscription_data = Subscription.objects.filter(id=data.subscription.id, charged__gt=0).first()
+        if subscription_data is not None:
+          balance -= subscription_data.charged
+          tmp = {
+            'id_history': data.id,
+            'id_subscription': subscription_data.id,
+            'type': 'subscription',
+            'ts_subscription': subscription_data.ts_subscription,
+            'zone_id': subscription_data.zone.id,
+            'zone_name': subscription_data.zone.name,
+            'charged': subscription_data.charged,
+            'balance': balance
+          }
+          ret.append(tmp)
+
+    # print(history_data)
+    msg = "History cnt " + str(last_num_history) + " OK"
+    print("--------------------------------------")
+    print(ret)
+    print("--------------------------------------")
+    reverse = ret[::-1]
+    print(reverse)
+    print("--------------------------------------")
+
+    return generate_dict_response_ok(request, msg, reverse)

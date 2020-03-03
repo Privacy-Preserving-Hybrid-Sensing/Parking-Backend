@@ -1,7 +1,7 @@
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources
 from django.contrib import admin
-from .models import ParkingZone, ParkingSpot, Subscription, ParkingZonePolygonGeoPoint, Participation, Profile, ParkingSpotHistory
+from .models import ParkingZone, ParkingSpot, Subscription, ParkingZonePolygonGeoPoint, Participation, Profile, ParkingSpotHistory, History
 
 
 class ParkingZoneResource(resources.ModelResource):
@@ -39,7 +39,7 @@ class SubscriptionResource(resources.ModelResource):
     model = Subscription
 class SubscriptionAdmin(ImportExportModelAdmin):
   resource_class = SubscriptionResource
-  list_display = ['ts','subscriber_uuid','zone','charged']
+  list_display = ['ts_subscription','subscriber_uuid','zone','charged']
 
 class ProfileResource(resources.ModelResource):
   class Meta:
@@ -55,6 +55,12 @@ class ParticipationAdmin(ImportExportModelAdmin):
   resource_class = ParticipationResource
   list_display = ['ts_update','participant_uuid', 'participation_value', 'incentive_processed','parking_spot', 'incentive_value', 'ts_incentive']
 
+class HistoryResource(resources.ModelResource):
+  class Meta:
+    model = History
+class HistoryAdmin(ImportExportModelAdmin):
+  resource_class = HistoryResource
+  list_display = ['ts_history','subscriber_uuid', 'participation', 'subscription']
 
 
 admin.site.register(ParkingZone, ParkingZoneAdmin)
@@ -64,3 +70,4 @@ admin.site.register(ParkingSpotHistory, ParkingSpotHistoryAdmin)
 admin.site.register(Subscription, SubscriptionAdmin)
 admin.site.register(Participation, ParticipationAdmin)
 admin.site.register(Profile, ProfileAdmin)
+admin.site.register(History, HistoryAdmin)

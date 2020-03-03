@@ -150,6 +150,8 @@ class Participation(models.Model):
     if participation_data == None:
       participation_data = Participation(participant_uuid=participant_uuid, participation_value=participation_value, parking_spot=parking_spot, previous_value=parking_spot.parking_status)
       participation_data.save()
+      history_data = History(participation=participation_data, subscriber_uuid=participant_uuid)
+      history_data.save()
     else:
       participation_data.ts_update = datetime.now()
       participation_data.previous_value = parking_spot.parking_status
@@ -157,18 +159,37 @@ class Participation(models.Model):
       participation_data.incentive_processed = False
       participation_data.incentive_value = 0
       participation_data.save()
+      history_data = History.objects.filter(participation=participation_data, subscriber_uuid=participant_uuid).first()
+      history_data.ts_history = datetime.now()
+      history_data.save()
 
     return participation_data
 
 class Subscription(models.Model):
-  ts = models.DateTimeField(default=now)
+  ts_subscription = models.DateTimeField(default=now)
   subscriber_uuid = models.CharField(max_length=100, db_index=True)
   zone = models.ForeignKey(ParkingZone, on_delete=models.CASCADE, blank=True, null=True)
   charged = models.IntegerField(default=0)
   class Meta:
       verbose_name = 'Subscription'
       verbose_name_plural = 'Subscriptions'
+  
+  def subscribe(subscriber_uuid, zone, charged):
+      # parking_zone = ParkingZone.objects.filter(id=zone_id).first()
+      subscription_data = Subscription(subscriber_uuid=subscriber_uuid, zone=zone, charged=charged)
+      subscription_data.save()
+      history_data = History(subscription=subscription_data, subscriber_uuid=subscriber_uuid)
+      history_data.save()
+      return subscription_data
 
+class History(models.Model):
+  ts_history = models.DateTimeField(default=now)
+  subscriber_uuid = models.CharField(max_length=100, db_index=True, default="")
+  participation = models.ForeignKey(Participation, on_delete=models.CASCADE, blank=True, null=True)
+  subscription = models.ForeignKey(Subscription, on_delete=models.CASCADE, blank=True, null=True)
+  class Meta:
+      verbose_name = 'History'
+      verbose_name_plural = 'History'
 
 class Profile(models.Model):
   ts = models.DateTimeField(default=now)
