@@ -66,9 +66,8 @@ For other HTTP code response, means as is.
 | 5 | [GET /api/zones/*zone_id*/spots/*spot_id*](#get-apizonesintzone_idspotsintspot_id)| Getting specific parking spots based on Parking Zone ID. |
 | 6 | [GET /api/zones/*zone_id*/subscribe](#get-apizonesintzone_idsubscribe)| Subscribe specific parking zone. |
 | 7 | [GET /api/profile/summary](#get-apiprofilesummary) | Get summary (credit balance, participation, subsription, etc) |
-| 8 | [GET /api/profile/history/*last_num_participation*](#get-apiprofilehistoryintlast_num_history) | Get participation & subscription history |
+| 8 | [GET /api/profile/history/*last_num_history*](#get-apiprofilehistoryintlast_num_history) | Get participation & subscription history |
 | 9 | [GET /api/participate/*zone_id*/*spot_id*/*status*](#post-apiparticipateintzone_idintspot_idstringstatus) | Participate crowd source parking spot information |
-| 10 | [GET /api/profile/register/*email*](#post-apiprofileregisterstringemail) | Bind email to user's subscriber UUID |
 
 #### `GET /api/zones/all`
 response:
@@ -249,19 +248,6 @@ Response:
   "participation_value": int,
   "incentive_processed": boolean,
   "incentive_value": int
-}
-```
-
-#### `GET /api/profile/register/<string:email>`
-Response:
-```javascript
-{
-  "id": int,
-  "ts": datetime,
-  "subscriber_uuid": string,
-  "email": string,
-  "validation_url": string,
-  "validated": boolean
 }
 ```
 
