@@ -255,7 +255,25 @@ Response:
 
 ## Web Application
 
-TODO:
+### Login
+![Admin Login](https://gitlab.anu.edu.au/u1063268/smart-parking-backend/raw/master/docs/login.png "Admin Login")
+
+### Menu
+![Admin menu](https://gitlab.anu.edu.au/u1063268/smart-parking-backend/raw/master/docs/menu.png "Admin menu")
+
+
+### List Data
+![List Data](https://gitlab.anu.edu.au/u1063268/smart-parking-backend/raw/master/docs/list.png "List Data")
+
+### Add / Edit Data
+![Add / Edit Data](https://gitlab.anu.edu.au/u1063268/smart-parking-backend/raw/master/docs/add.png "Add / Edit Data")
+
+### Export Data
+![Export Data](https://gitlab.anu.edu.au/u1063268/smart-parking-backend/raw/master/docs/export.png "Export Data")
+
+### Import Data
+![Import Data](https://gitlab.anu.edu.au/u1063268/smart-parking-backend/raw/master/docs/import.png "Import Data")
+
 
 ## Background
 
