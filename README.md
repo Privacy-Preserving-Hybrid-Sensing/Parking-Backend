@@ -7,9 +7,9 @@ SmartParking is an incentivize CrowdSourced information sharing platform for Par
 
 This docs describe  SmartParking Backend modules:
 
-- [Smart Parking API](#api)
-- [Smart Parking Web Application](#web-application)
-- [Smart Parking Background](#background)
+- [API](#api)
+- [Web Administrator](#web-application)
+- [Background Process](#background)
 
 ## API
 This docs describe how to use the SmartParking API. We hope you enjoy these docs, and please don't hesitate to [file an issue](https://gitlab.anu.edu.au/u1063268/smart-parking-backend/issues/new) if you see anything missing.
