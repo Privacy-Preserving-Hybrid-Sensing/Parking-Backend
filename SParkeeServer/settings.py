@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_extensions',
     'background_task',
     'import_export',
     'kronos',
@@ -191,4 +192,9 @@ LOGGING = {
             'propagate': True,
         },
     },
+}
+
+GRAPH_MODELS = {
+  'all_applications': True,
+  'group_models': True,
 }
