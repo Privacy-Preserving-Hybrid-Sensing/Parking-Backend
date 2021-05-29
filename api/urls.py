@@ -5,6 +5,7 @@ from .views import zones_all, zones_id, zones_search_keyword, zones_id_spots_all
 from .views import profile_summary, profile_participations_last_num_participation, profile_register_email, profile_participations_latest
 from .views import participate_zone_spot_status
 from .views import profile_history_last_num_history
+from .views import zk_serve_crypto_info, zk_register
 # from .views import parking_spots_get_all, parking_spots_get_id, parking_spots_search
 
 urlpatterns = [
@@ -21,4 +22,8 @@ urlpatterns = [
 
     path("participate/<int:zone_id>/<int:spot_id>/<str:str_status>", participate_zone_spot_status, name="participate_zone_spot_status"),
     path("profile/register/<str:email>", profile_register_email, name="profile_register_email"),
+    
+    # ZK
+    path("zk/cryptoInfo", zk_serve_crypto_info, name="zk_serve_crypto_info"),
+    path("zk/register", zk_register, name="zk_register"),
 ]

@@ -7,3 +7,4 @@ django-kronos==1.0
 django-import-export
 django-admin-relation-links
 uwsgi
+requests

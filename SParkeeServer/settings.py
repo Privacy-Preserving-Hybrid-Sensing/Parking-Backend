@@ -88,13 +88,17 @@ WSGI_APPLICATION = 'SParkeeServer.wsgi.application'
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
 DATABASES = {
+    #'default': {
+    #    'ENGINE': 'django.db.backends.postgresql_psycopg2',
+    #    'NAME': env('DBNAME'),
+    #    'USER': env('DBUSER'),
+    #    'PASSWORD': env('DBPASS'),
+    #    'HOST': env('DBHOST'),
+    #    'PORT': env('DBPORT') 
+    #}
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'ENGINE': 'django.db.backends.sqlite3',
         'NAME': env('DBNAME'),
-        'USER': env('DBUSER'),
-        'PASSWORD': env('DBPASS'),
-        'HOST': env('DBHOST'),
-        'PORT': env('DBPORT') 
     }
 }
 
