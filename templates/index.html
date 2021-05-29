@@ -619,7 +619,7 @@ function plot_realtime(lat, lon, status, ts_update) {
 }
 
 
-var ws = new WebSocket('ws://ec2-3-133-91-181.us-east-2.compute.amazonaws.com:15674/ws');
+var ws = new WebSocket('ws://192.168.1.16:15674/ws');
 var client = Stomp.over(ws);
 
 var on_connect = function() {

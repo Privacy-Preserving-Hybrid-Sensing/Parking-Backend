@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.db.models import Avg, Max, Min, Sum
 from django.db.models import Q
 from backend.models import ParkingSpot, Participation, ParkingZone, ParkingZonePolygonGeoPoint, Subscription, ParkingAvailabilityLog, Profile, History
-import json
+import json, requests
 from django.core import serializers
 from django.forms.models import model_to_dict
 from django.views.decorators.csrf import csrf_exempt
@@ -12,6 +12,15 @@ from .decorators import required_field
 
 DEFAULT_MINUTE_THRESHOLD = 5
 BASE_VALIDATION = "http://localhost:8000/web/validation/"
+
+# ZK
+ZK_HOST = "http://localhost:8080/"
+ZK_URL_CRYPTO_INFO = ZK_HOST + "getCryptoInfo"
+ZK_URL_REGISTER = ZK_HOST + "register"
+ZK_URL_DATA_SUBMISSION = ZK_HOST + "submitData"
+ZK_URL_VERIFY_CREDENTIAL = ZK_HOST + "claimVerifyCredential"
+ZK_URL_VERIFY_Q = ZK_HOST + "claimVerifyQ"
+ZK_URL_CLAIM_REWARD = ZK_HOST + "claimReward"
 
 @csrf_exempt
 @required_field
@@ -470,3 +479,31 @@ def profile_history_last_num_history(request, last_num_history):
     reverse = ret[::-1]
 
     return generate_dict_response_ok(request, msg, reverse[:last_num_history])
+
+
+#### ZK IMPLEMENTATION ####
+def generate_zk_response_err(request, msg):
+    return {'status': 'ERR', 'path': request.path, 'msg': msg, 'zk': []}
+
+def generate_zk_response_ok(request, msg, data):
+    return {'status': 'OK', 'path': request.path, 'msg': msg, 'zk': data}
+
+def zk_post(url, json):
+    headers = {"Content-Type":"application/json"}
+    return requests.post(url, json=json, headers=headers)
+
+@csrf_exempt
+@required_field  
+def zk_serve_crypto_info(request):
+    # TODO: TANYA PAK ADIN, INI HEADER YANG UUID SAMA 1 LAGI BUAT APA DI BACKEND?
+    message = "ZK Crypto info service"
+    response = requests.get(ZK_URL_CRYPTO_INFO)
+    return generate_zk_response_ok(request, message, response)
+
+@csrf_exempt
+@required_field  
+def zk_register(request):
+    # TODO: TANYA PAK ADIN, INI HEADER YANG UUID SAMA 1 LAGI BUAT APA DI BACKEND?
+    message = "ZK Registration service"
+    response = zk_post(ZK_URL_REGISTER, json.loads(request.body.decode('utf-8')))
+    return generate_zk_response_ok(request, message, response)
