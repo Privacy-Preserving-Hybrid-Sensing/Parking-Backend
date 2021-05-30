@@ -24,6 +24,6 @@ urlpatterns = [
     path("profile/register/<str:email>", profile_register_email, name="profile_register_email"),
     
     # ZK
-    path("zk/cryptoInfo", zk_serve_crypto_info, name="zk_serve_crypto_info"),
+    path("zk/cryptoinfo", zk_serve_crypto_info, name="zk_serve_crypto_info"),
     path("zk/register", zk_register, name="zk_register"),
 ]

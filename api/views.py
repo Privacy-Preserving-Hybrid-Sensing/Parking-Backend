@@ -9,6 +9,7 @@ from django.forms.models import model_to_dict
 from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime, timedelta, date
 from .decorators import required_field
+from django.http import JsonResponse
 
 DEFAULT_MINUTE_THRESHOLD = 5
 BASE_VALIDATION = "http://localhost:8000/web/validation/"
@@ -482,28 +483,32 @@ def profile_history_last_num_history(request, last_num_history):
 
 
 #### ZK IMPLEMENTATION ####
+
 def generate_zk_response_err(request, msg):
-    return {'status': 'ERR', 'path': request.path, 'msg': msg, 'zk': []}
+    resp = {'status': 'ERR', 'path': request.path, 'msg': msg, 'zk': []}
+    return JsonResponse(resp, safe=False)
 
 def generate_zk_response_ok(request, msg, data):
-    return {'status': 'OK', 'path': request.path, 'msg': msg, 'zk': data}
+    resp = {'status': 'OK', 'path': request.path, 'msg': msg, 'zk': data}
+    return JsonResponse(resp, safe=False)
 
-def zk_post(url, json):
+def zk_post(url, json_obj):
     headers = {"Content-Type":"application/json"}
-    return requests.post(url, json=json, headers=headers)
+    return json.loads(requests.post(url, json=json_obj, headers=headers).text)
 
 @csrf_exempt
-@required_field  
 def zk_serve_crypto_info(request):
-    # TODO: TANYA PAK ADIN, INI HEADER YANG UUID SAMA 1 LAGI BUAT APA DI BACKEND?
+    print("masuk ke zk_crypto_info")
     message = "ZK Crypto info service"
-    response = requests.get(ZK_URL_CRYPTO_INFO)
+    x = requests.get(ZK_URL_CRYPTO_INFO).text
+    response = json.loads(x)
     return generate_zk_response_ok(request, message, response)
 
 @csrf_exempt
-@required_field  
 def zk_register(request):
-    # TODO: TANYA PAK ADIN, INI HEADER YANG UUID SAMA 1 LAGI BUAT APA DI BACKEND?
+    print("masuk ke zk_register")
     message = "ZK Registration service"
-    response = zk_post(ZK_URL_REGISTER, json.loads(request.body.decode('utf-8')))
+    json_obj = json.loads(request.body.decode('utf-8'))
+    response = zk_post(ZK_URL_REGISTER, json_obj)
+    print("\nREGISTER RESPONSE:\n" + json.dumps(response) + "\n")
     return generate_zk_response_ok(request, message, response)
