@@ -488,6 +488,7 @@ def profile_history_last_num_history(request, last_num_history):
 
 
 #### ZK IMPLEMENTATION ####
+
 def generate_zk_response_err(request, msg):
     resp = {'status': 'ERR', 'path': request.path, 'msg': msg, 'zk': []}
     return JsonResponse(resp, safe=False, status=500)

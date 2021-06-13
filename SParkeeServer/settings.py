@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_extensions',
     'background_task',
     'import_export',
     'kronos',
@@ -89,13 +90,17 @@ WSGI_APPLICATION = 'SParkeeServer.wsgi.application'
 
 DATABASES = {
     'default': {
-       'ENGINE': 'django.db.backends.postgresql_psycopg2',
-       'NAME': env('DBNAME'),
-       'USER': env('DBUSER'),
-       'PASSWORD': env('DBPASS'),
-       'HOST': env('DBHOST'),
-       'PORT': env('DBPORT') 
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': env('DBNAME'),
+        'USER': env('DBUSER'),
+        'PASSWORD': env('DBPASS'),
+        'HOST': env('DBHOST'),
+        'PORT': env('DBPORT') 
     }
+    #'default': {
+    #    'ENGINE': 'django.db.backends.sqlite3',
+    #    'NAME': env('DBNAME'),
+    #}
 }
 
 
@@ -191,4 +196,9 @@ LOGGING = {
             'propagate': True,
         },
     },
+}
+
+GRAPH_MODELS = {
+  'all_applications': True,
+  'group_models': True,
 }
