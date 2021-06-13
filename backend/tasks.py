@@ -62,20 +62,20 @@ class MAJORITY_Thread(threading.Thread):
 
         participation_activity_logs = Participation.objects.filter(ts_update__gt=time_window_ev, ts_update__lt=time_window_tr_pending).all()
         for participation_activity in participation_activity_logs:
-          spot_id = participation_activity.parking_spot.id
-          data[spot_id] = { 'spot_id': spot_id, 'available': 0, 'unavailable': 0, 'total_participants': 0}
+            spot_id = participation_activity.parking_spot.id
+            data[spot_id] = { 'spot_id': spot_id, 'available': 0, 'unavailable': 0, 'total_participants': 0}
 
         time_window_tr = datetime.now() - timedelta(seconds=PROCESSING_TIME_WINDOW + PROCESSING_INTERVAL)
         participation_in_treshold_logs = Participation.objects.filter(ts_update__gt=time_window_tr, ts_update__lt=time_window_tr_pending).all()
         for participation_in_treshold in participation_in_treshold_logs:
-          spot_id = participation_in_treshold.parking_spot.id
-          availability_value = participation_in_treshold.participation_value
+            spot_id = participation_in_treshold.parking_spot.id
+            availability_value = participation_in_treshold.participation_value
 
-          if availability_value < 0:
-            data[spot_id]['unavailable'] += 1
-          elif availability_value > 0:
-            data[spot_id]['available'] += 1
-          data[spot_id]['total_participants'] += 1
+            if availability_value < 0:
+                data[spot_id]['unavailable'] += 1
+            elif availability_value > 0:
+                data[spot_id]['available'] += 1
+                data[spot_id]['total_participants'] += 1
 
         return data
 
@@ -91,7 +91,7 @@ class MAJORITY_Thread(threading.Thread):
                 if majority > 0:
                     confidence_level = data['available'] / total
                     if confidence_level > 0.7:
-                       parking_status = 3
+                        parking_status = 3
                     elif confidence_level > 0.4:
                         parking_status = 2
                     elif confidence_level > 0.1:
@@ -123,7 +123,7 @@ class MAJORITY_Thread(threading.Thread):
                     parking_status = parking_status,
                     parking_spot = current_parking_spot_data,
                     zone = current_parking_spot_data.zone
-                  )
+                    )
                 history.save()
 
             current_parking_spot_data.vote_available = data['available']
@@ -137,7 +137,6 @@ class MAJORITY_Thread(threading.Thread):
 
     def run(self):
         while True:
-
             print(datetime.now().strftime("%Y-%m-%d %H:%M:%s"))
             self.calculate_parking_log()
             time.sleep(PROCESSING_INTERVAL)
@@ -182,17 +181,29 @@ class CREDIT_Thread(threading.Thread):
         self.broadcast_credit_balance_to_topic_participant_uuid(list_participant_uuid)
 
     def broadcast_credit_balance_to_topic_participant_uuid(self, list_participant_uuid):
-
+        # [GG] SOMEHOW PERLU BUAT SUPAYA SEMUA ZK PARAM BISA MASUK SINI
         for participant_uuid in list(list_participant_uuid):
             data_participation = Participation.objects.filter(participant_uuid=participant_uuid, incentive_processed=True).aggregate(Sum('incentive_value'))
             incentive = 0
             if data_participation['incentive_value__sum'] is not None:
-              incentive += data_participation['incentive_value__sum']
+                incentive += data_participation['incentive_value__sum']
+                # [GG] Add publish to AMQP so that user know that his ZK submission is regarded available to claim credit
+                # Tell user that he should now proceed with credit claiming, this will trigger client to make HTTP request to 
+                # another endpoints defined in urls.py
+                zk_submission_response = {
+                    "status": "OK", 
+                    "path": "/api/zk/submission-accepted-init-reward",
+                    "msg": "Your ZK submission is eligible for credit reward, please claim it.", 
+                    "data": { 
+                        'eligibility' : True, # cek lgi
+                    }
+                }
+                self.channel.basic_publish(exchange='amq.topic', routing_key=participant_uuid, body=json.dumps(zk_submission_response))
 
             data_charged = Subscription.objects.filter(subscriber_uuid=participant_uuid).aggregate(Sum('charged'))
             charged = 0
             if data_charged['charged__sum'] is not None:
-              charged += data_charged['charged__sum']
+                charged += data_charged['charged__sum']
 
             balance = incentive - charged
 
@@ -272,14 +283,13 @@ class AMQP_Publish_Time_Thread(threading.Thread):
         connection = pika.BlockingConnection(parameters)
         channel = connection.channel()
         while True:
-          message = datetime.now().strftime("%c")
-          try:
-            print(message)
-            channel.basic_publish(exchange='amq.topic', routing_key='time', body=message)
-          except:
-            print("Some Publish Error, skip this Time loop process")
-          
-          time.sleep(1)
+            message = datetime.now().strftime("%c")
+            try:
+                print(message)
+                channel.basic_publish(exchange='amq.topic', routing_key='time', body=message)
+            except:
+                print("Some Publish Error, skip this Time loop process")
+            time.sleep(1)
 
 # publish_time_thread = AMQP_Publish_Time_Thread()
 # publish_time_thread.daemon = True

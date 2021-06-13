@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.db.models import Avg, Max, Min, Sum
 from django.db.models import Q
 from backend.models import ParkingSpot, Participation, ParkingZone, ParkingZonePolygonGeoPoint, Subscription, ParkingAvailabilityLog, Profile, History
@@ -9,6 +9,7 @@ from django.forms.models import model_to_dict
 from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime, timedelta, date
 from .decorators import required_field
+from .zksession import ZKSession, ZKSessionManager as zk_session_manager
 
 DEFAULT_MINUTE_THRESHOLD = 5
 BASE_VALIDATION = "http://localhost:8000/web/validation/"
@@ -317,6 +318,7 @@ def get_remain_credit(subscriber_uuid):
 @csrf_exempt
 @required_field  
 def participate_zone_spot_status(request, zone_id, spot_id, str_status):
+    # [GG] this function is duo-handling (normal participation and ZK data submission)
     subscriber_uuid = request.headers['Subscriber-Uuid']
 
     value_participation = 1
@@ -327,6 +329,10 @@ def participate_zone_spot_status(request, zone_id, spot_id, str_status):
 
     parking_spot = ParkingSpot.objects.filter(id=spot_id, zone=parking_zone).first()
 
+    # [GG] Requesting to ZK microservice (submitting user participation),
+    # ZK response to client for data submission will be handled by tasks.py asynchronously
+    zk_post(ZK_URL_DATA_SUBMISSION, json.loads(request.body.decode('utf-8')))
+    
     data = Participation.participate(
       parking_spot, 
       subscriber_uuid,
@@ -483,27 +489,111 @@ def profile_history_last_num_history(request, last_num_history):
 
 #### ZK IMPLEMENTATION ####
 def generate_zk_response_err(request, msg):
-    return {'status': 'ERR', 'path': request.path, 'msg': msg, 'zk': []}
+    resp = {'status': 'ERR', 'path': request.path, 'msg': msg, 'zk': []}
+    return JsonResponse(resp, safe=False, status=500)
 
 def generate_zk_response_ok(request, msg, data):
-    return {'status': 'OK', 'path': request.path, 'msg': msg, 'zk': data}
+    resp = {'status': 'OK', 'path': request.path, 'msg': msg, 'zk': data}
+    return JsonResponse(resp, safe=False, status=200)
 
 def zk_post(url, json):
     headers = {"Content-Type":"application/json"}
-    return requests.post(url, json=json, headers=headers)
+    return json.loads(requests.post(url, json=json, headers=headers).text)
 
 @csrf_exempt
-@required_field  
 def zk_serve_crypto_info(request):
-    # TODO: TANYA PAK ADIN, INI HEADER YANG UUID SAMA 1 LAGI BUAT APA DI BACKEND?
     message = "ZK Crypto info service"
-    response = requests.get(ZK_URL_CRYPTO_INFO)
+    response = json.loads(requests.get(ZK_URL_CRYPTO_INFO).text)
     return generate_zk_response_ok(request, message, response)
 
 @csrf_exempt
-@required_field  
 def zk_register(request):
-    # TODO: TANYA PAK ADIN, INI HEADER YANG UUID SAMA 1 LAGI BUAT APA DI BACKEND?
-    message = "ZK Registration service"
+    subscriber_uuid = request.headers['Subscriber-Uuid']
     response = zk_post(ZK_URL_REGISTER, json.loads(request.body.decode('utf-8')))
+    
+    ret = {}
+    if response["regis_success"] == "true": # atau bagusan ubah jadi bool?
+        message = "ZK Registration service successfully registered the user"
+        # [GG] add ZK session on registration
+        zk_session_manager.add_session(subscriber_uuid)
+        ret = generate_zk_response_ok(request, message, response)
+    else:
+        message = "ZK Registration service can not registered the user"
+        ret = generate_zk_response_err(request, message)
+    return ret
+
+@csrf_exempt
+def zk_get_session(request):
+    subscriber_uuid = request.headers['Subscriber-Uuid']
+    zk_session_manager.add_session(subscriber_uuid)
+
+    message = "ZK session added successfully"
+    response = {"success": True}
     return generate_zk_response_ok(request, message, response)
+
+# ZK SUBMIT DATA IS HANDLED BY FUNCTION "participate_zone_spot_status" ABOVE
+
+# TODO: UNTUK STEP 4
+@csrf_exempt
+def zk_claim_verify_credential(request):
+    subscriber_uuid = request.headers['Subscriber-Uuid']
+    session = zk_session_manager.get_session(subscriber_uuid)
+
+    '''
+    For the next researcher, currently the app still relly on client side trust.
+    This way, if the endpoints is queried by client, then it is assumed True that
+    the client is eligible to claim credits. However, we should check first if client is eligible
+    to claim credit of not in the sessions. The current researher can't find way to communicate
+    between tasks.py to notify views.py that client with uuid of X is eligible to claim credit.
+
+    The code should look like following (replace this comment section with this code):
+        **if not session.eligible_to_claim_credit:
+            message = "Not eligible to claim, can not claim reward"
+            return generate_zk_response_err(request, message)**
+    '''
+    response = zk_post(ZK_URL_VERIFY_CREDENTIAL, json.loads(request.body.decode('utf-8')))
+    ret = {}
+    if response["verification_success"] == "true":
+        message = "ZK Verify Credential service successfully verified the user"
+        # [GG] change session's credential_verified attr to True
+        session.credential_verified = True
+        ret = generate_zk_response_ok(request, message, response)
+    else:
+        message = "ZK Verify Credential service failed to verify the user"
+        ret = generate_zk_response_err(request, message)
+    return ret
+
+@csrf_exempt
+def zk_claim_verify_q(request):
+    subscriber_uuid = request.headers['Subscriber-Uuid']
+    session = zk_session_manager.get_session(subscriber_uuid)
+    
+    if not session.credential_verified:
+        message = "Credentials not verified, can not claim reward"
+        return generate_zk_response_err(request, message)
+
+    response = zk_post(ZK_URL_VERIFY_Q, json.loads(request.body.decode('utf-8')))
+    ret = {}
+    if response["verification_success"] == "true":
+        message = "ZK Verify Credential service successfully verified user q"
+        # [GG] change session's q_verified attr to True
+        session.q_verified = True
+        ret = generate_zk_response_ok(request, message, response)
+    else:
+        message = "ZK Verify Credential service failed to verify user q"
+        ret = generate_zk_response_err(request, message)
+    return ret
+
+@csrf_exempt
+def zk_claim_reward(request):
+    subscriber_uuid = request.headers['Subscriber-Uuid']
+    session = zk_session_manager.get_session(subscriber_uuid)
+    if not session.q_verified:
+        message = "q not verified, can not claim reward"
+        ret = generate_zk_response_err(request, message)
+    else:
+        message = "Claimed reward successfully"
+        response = zk_post(ZK_URL_CLAIM_REWARD, json.loads(request.body.decode('utf-8')))
+        zk_session_manager.reset_session(subscriber_uuid)
+        ret = generate_zk_response_ok(request, message, response) 
+    return ret
