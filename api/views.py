@@ -496,9 +496,9 @@ def generate_zk_response_ok(request, msg, data):
     resp = {'status': 'OK', 'path': request.path, 'msg': msg, 'zk': data}
     return JsonResponse(resp, safe=False, status=200)
 
-def zk_post(url, json):
+def zk_post(url, json_obj):
     headers = {"Content-Type":"application/json"}
-    return json.loads(requests.post(url, json=json, headers=headers).text)
+    return json.loads(requests.post(url, json=json_obj, headers=headers).text)
 
 @csrf_exempt
 def zk_serve_crypto_info(request):
