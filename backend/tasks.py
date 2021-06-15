@@ -168,9 +168,32 @@ class CREDIT_Thread(threading.Thread):
                 elif history_parking_status < 0 and participation_value < 0:
                     credit_cnt = 1
 
+                # [GG DEBUG MID NIGHT] INI credit_cnt ga kepake? user bakal selalu dapat incentive kah?
+                # APA MAKSUDNYA KALAU credit_cnt == 0 itu dia ga eligible??
+                # confirm Pak Adin
                 participation.incentive_processed = True
                 participation.incentive_value = 1
                 participation.save()
+                # [GG DEBUG MID NIGHT]
+                # Implementasi TRY 1.
+                zk_claim_eligibility = "false"
+                if credit_cnt == 1:
+                    zk_claim_eligibility = "true"
+                
+                # ASUMSI, ANGGEP AE TRUE TERUS DULU. NANTI PASTIKAN KE PAD ADIN LAGI
+                zk_claim_eligibility = "true"
+                
+                zk_submission_response = {
+                    "status": "OK", 
+                    "path": "/api/zk/submission-accepted-init-reward",
+                    "msg": "Your ZK submission is eligible for credit reward, please claim it.", 
+                    "zk": { 
+                        'eligibility' : zk_claim_eligibility, # cek lgi
+                    }
+                }
+                self.channel.basic_publish(exchange='amq.topic', routing_key=participant_uuid, body=json.dumps(zk_submission_response))
+
+                # END Implementasi TRY 1
 
 
             if participant_uuid not in list_participant_uuid:
@@ -185,23 +208,27 @@ class CREDIT_Thread(threading.Thread):
         for participant_uuid in list(list_participant_uuid):
             data_participation = Participation.objects.filter(participant_uuid=participant_uuid, incentive_processed=True).aggregate(Sum('incentive_value'))
             incentive = 0
-            zk_claim_eligibility = "false"
+            # [GG] START
+            #####zk_claim_eligibility = "false"
             if data_participation['incentive_value__sum'] is not None:
                 incentive += data_participation['incentive_value__sum']
                 # [GG] Add publish to AMQP so that user know that his ZK submission is regarded available to claim credit
                 # Tell user that he should now proceed with credit claiming, this will trigger client to make HTTP request to 
                 # another endpoints defined in urls.py
-                zk_claim_eligibility = "true"
+
+                # [GG DEBUG MID NIGHT] INI KODE APA SIH? DIA CALCULATE SALDO SETIAP SAAT DAN PUBLISH GITU? CONFIRM KE PAK ADIN
+                #####zk_claim_eligibility = "true"
                 
-            zk_submission_response = {
-                "status": "OK", 
-                "path": "/api/zk/submission-accepted-init-reward",
-                "msg": "Your ZK submission is eligible for credit reward, please claim it.", 
-                "zk": { 
-                    'eligibility' : zk_claim_eligibility, # cek lgi
-                }
-            }
+            #####zk_submission_response = {
+            #####    "status": "OK", 
+            #####    "path": "/api/zk/submission-accepted-init-reward",
+            #####    "msg": "Your ZK submission is eligible for credit reward, please claim it.", 
+            #####    "zk": { 
+            #####        'eligibility' : zk_claim_eligibility, # cek lgi
+            #####    }
+            #####}
             self.channel.basic_publish(exchange='amq.topic', routing_key=participant_uuid, body=json.dumps(zk_submission_response))
+            # [GG] END
 
             data_charged = Subscription.objects.filter(subscriber_uuid=participant_uuid).aggregate(Sum('charged'))
             charged = 0
