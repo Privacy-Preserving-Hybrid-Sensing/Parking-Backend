@@ -23,7 +23,6 @@ env = environ.Env()
 environ.Env.read_env(BASE_DIR + "/.env")  # reading .env file
 
 PROCESSING_TIME_WINDOW = 300    # IN SECONDS (300 seconds => 5 minutes)
-RC_TIMER = 1        # IN SECONDS
 PROCESSING_INTERVAL = 10        # IN SECONDS
 
 
@@ -233,7 +232,7 @@ class CREDIT_Thread(threading.Thread):
                 }
                 }
                 send_data = json.dumps(tmp)
-                print("TO TOKEN: "+ participant_uuid)
+                print("[BALANCE] TO TOKEN: "+ participant_uuid)
                 print(send_data)
                 self.channel.basic_publish(exchange='amq.topic', routing_key=participant_uuid, body=send_data)
 
@@ -264,7 +263,7 @@ class CREDIT_Thread(threading.Thread):
               }
             }
             send_data = json.dumps(tmp)
-            print("TO TOKEN: "+ token)
+            print("[SPOT CHANGES] TO TOKEN: "+ token)
             print(send_data)
             self.channel.basic_publish(exchange='amq.topic', routing_key=token, body=send_data)
             history.notify_status=True
@@ -277,9 +276,8 @@ class CREDIT_Thread(threading.Thread):
             connection = pika.BlockingConnection(parameters)
             self.channel = connection.channel()
             print(datetime.now().strftime("%Y-%m-%d %H:%M:%s"))
-            self.calculate_participation_log()
-            time.sleep(RC_TIMER)
             self.broadcast_parking_spot_changes()
+            self.calculate_participation_log()
             time.sleep(PROCESSING_INTERVAL)
 
             # Check every 30 seconds interval to get credit
