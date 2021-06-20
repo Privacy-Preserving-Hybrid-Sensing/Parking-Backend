@@ -183,12 +183,10 @@ class CREDIT_Thread(threading.Thread):
                     "path": "/api/zk/submission-accepted-init-reward",
                     "msg": "Your ZK submission is eligible for credit reward, please claim it.", 
                     "zk": { 
-                        'eligibility' : zk_claim_eligibility, # cek lgi
+                        'eligibility' : zk_claim_eligibility,
                     }
                 }
                 self.channel.basic_publish(exchange='amq.topic', routing_key=participant_uuid, body=json.dumps(zk_submission_response))
-
-                # END Implementasi TRY 1
 
 
             if participant_uuid not in list_participant_uuid:
