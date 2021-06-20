@@ -146,6 +146,8 @@ majority_thread = MAJORITY_Thread()
 majority_thread.daemon = True
 majority_thread.start()
 
+KNOWN_USER_BALANCE = {}
+
 
 class CREDIT_Thread(threading.Thread):
     channel = None
@@ -211,21 +213,28 @@ class CREDIT_Thread(threading.Thread):
 
             cnt_participation = Participation.objects.filter(participant_uuid=participant_uuid).count()
 
-            tmp = {  
-              "status": "OK", 
-              "path": "/api/profile/summary",
-              "msg": "Broadcast Profile Summary OK", 
-              "data": { 
-                    'participation' : cnt_participation,
-                    'balance' : balance, 
-                    'incentive': incentive, 
-                    'charged': charged
-              }
-            }
-            send_data = json.dumps(tmp)
-            print("TO TOKEN: "+ participant_uuid)
-            print(send_data)
-            self.channel.basic_publish(exchange='amq.topic', routing_key=participant_uuid, body=send_data)
+            send_broadcast = True
+            if KNOWN_USER_BALANCE.get(participant_uuid) == balance:
+                send_broadcast = False
+            else:
+                KNOWN_USER_BALANCE[participant_uuid] = balance
+
+            if send_broadcast:
+                tmp = {  
+                "status": "OK", 
+                "path": "/api/profile/summary",
+                "msg": "Broadcast Profile Summary OK", 
+                "data": { 
+                        'participation' : cnt_participation,
+                        'balance' : balance, 
+                        'incentive': incentive, 
+                        'charged': charged
+                }
+                }
+                send_data = json.dumps(tmp)
+                print("TO TOKEN: "+ participant_uuid)
+                print(send_data)
+                self.channel.basic_publish(exchange='amq.topic', routing_key=participant_uuid, body=send_data)
 
     def broadcast_parking_spot_changes(self):
 
