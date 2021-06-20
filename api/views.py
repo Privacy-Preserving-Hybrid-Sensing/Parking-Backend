@@ -534,7 +534,7 @@ def zk_get_session(request):
 
 # ZK SUBMIT DATA IS HANDLED BY FUNCTION "participate_zone_spot_status" ABOVE
 
-# TODO: UNTUK STEP 4
+# step 1 of credit claiming protocol, verifying user credential and nzkpCm[s]
 @csrf_exempt
 def zk_claim_verify_credential(request):
     subscriber_uuid = request.headers['Subscriber-Uuid']
@@ -564,6 +564,7 @@ def zk_claim_verify_credential(request):
         ret = generate_zk_response_err(request, message)
     return ret
 
+# step 2 of credit claiming protocol, verifying user Cm(q)
 @csrf_exempt
 def zk_claim_verify_q(request):
     subscriber_uuid = request.headers['Subscriber-Uuid']
@@ -585,6 +586,7 @@ def zk_claim_verify_q(request):
         ret = generate_zk_response_err(request, message)
     return ret
 
+# step 3 of credit claiming protocol, giving reward.
 @csrf_exempt
 def zk_claim_reward(request):
     subscriber_uuid = request.headers['Subscriber-Uuid']

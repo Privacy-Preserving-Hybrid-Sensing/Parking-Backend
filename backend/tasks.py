@@ -175,7 +175,7 @@ class CREDIT_Thread(threading.Thread):
                 participation.incentive_value = credit_cnt
                 participation.save()
 
-            
+                # [GG] Notify user whether their submission is eligible to claim credit or not
                 zk_claim_eligibility = "false"
                 if credit_cnt == 1:
                     zk_claim_eligibility = "true"
