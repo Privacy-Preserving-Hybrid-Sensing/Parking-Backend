@@ -23,6 +23,7 @@ env = environ.Env()
 environ.Env.read_env(BASE_DIR + "/.env")  # reading .env file
 
 PROCESSING_TIME_WINDOW = 300    # IN SECONDS (300 seconds => 5 minutes)
+RC_TIMER = 1        # IN SECONDS
 PROCESSING_INTERVAL = 10        # IN SECONDS
 
 
@@ -75,7 +76,7 @@ class MAJORITY_Thread(threading.Thread):
                 data[spot_id]['unavailable'] += 1
             elif availability_value > 0:
                 data[spot_id]['available'] += 1
-                data[spot_id]['total_participants'] += 1
+            data[spot_id]['total_participants'] += 1
 
         return data
 
@@ -276,8 +277,9 @@ class CREDIT_Thread(threading.Thread):
             connection = pika.BlockingConnection(parameters)
             self.channel = connection.channel()
             print(datetime.now().strftime("%Y-%m-%d %H:%M:%s"))
-            self.broadcast_parking_spot_changes()
             self.calculate_participation_log()
+            time.sleep(RC_TIMER)
+            self.broadcast_parking_spot_changes()
             time.sleep(PROCESSING_INTERVAL)
 
             # Check every 30 seconds interval to get credit
