@@ -344,11 +344,11 @@ def participate_zone_spot_status(request, zone_id, spot_id, str_status):
     5. Dengan demikian, kita bisa menentukan verifikasi nzkpCm, time slot, dan duplikasi data di TD sebelum memberikan eligibilitas credit_claim ke pengguna.
     '''
     zk_resp = zk_post(ZK_URL_DATA_SUBMISSION, json.loads(request.body.decode('utf-8')))
-    zk_resp = json.loads(zk_resp)["submission_success"]
+    zk_resp = zk_resp.get("submission_success")
     
     tmp = {'zk_success' : "false"}
     msg = "Participation ERROR"
-    if zk_resp:
+    if zk_resp == "true":
         data = Participation.participate(
           parking_spot, 
           subscriber_uuid,
