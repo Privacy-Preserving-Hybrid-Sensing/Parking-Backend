@@ -27,7 +27,7 @@ environ.Env.read_env(BASE_DIR + "/.env")  # reading .env file
 PROCESSING_TIME_WINDOW = 300    # IN SECONDS (300 seconds => 5 minutes)
 PROCESSING_INTERVAL = 10        # IN SECONDS
 
-# ZK Session
+# ZK Sessions data (required to make POST request to Views endpoint to update the user's eligibility_to_claim_credit session)
 SESSION_SECRET = get_session_secret()
 SESSION_ENDPOINT = "http://0.0.0.0:8000/api/zk/update-session"
 
@@ -181,7 +181,7 @@ class CREDIT_Thread(threading.Thread):
                 participation.incentive_value = credit_cnt
                 participation.save()
 
-                # [GG] Notify user whether their submission is eligible to claim credit or not
+                # Notify user whether their submission is eligible to claim credit or not
                 zk_claim_eligibility = "false"
                 if credit_cnt == 1:
                     zk_claim_eligibility = "true"
@@ -194,6 +194,7 @@ class CREDIT_Thread(threading.Thread):
                     headers = {"Content-Type":"application/json"}
                     requests.post(SESSION_ENDPOINT, json=json_data, headers=headers)
                 
+                # creating the response for user's eligibility to claim credit (MQ DATA)
                 zk_submission_response = {
                     "status": "OK", 
                     "path": "/api/zk/submission-accepted-init-reward",

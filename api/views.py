@@ -320,7 +320,10 @@ def get_remain_credit(subscriber_uuid):
 @csrf_exempt
 @required_field  
 def participate_zone_spot_status(request, zone_id, spot_id, str_status):
-    # [GG] this function is duo-handling (normal participation and ZK data submission)
+    '''
+    This function is used to handle the user's participation submission.
+    This function will handle woth the submission for non-ZK-participation and ZK-participation.
+    '''
     subscriber_uuid = request.headers['Subscriber-Uuid']
 
     value_participation = 1
@@ -331,18 +334,9 @@ def participate_zone_spot_status(request, zone_id, spot_id, str_status):
 
     parking_spot = ParkingSpot.objects.filter(id=spot_id, zone=parking_zone).first()
 
-    # [GG] Requesting to ZK microservice (submitting user participation),
+    # Requesting to ZK microservice (submitting user participation),
     # ZK response to client for data submission will be handled by tasks.py asynchronously
-    '''
-    Untuk peneliti berikutnya, implementasi ini dapat ditingkatkan karena hasil verifikasi nzkpCm dan pengecekan duplikasi TD menjadi
-    tidak terlalu berpengaruh terhadap credit claiming pengguna. Seharusnya, implementasi dapat ditingkatkan sebagai berikut:
-    1. Ubah model Participation agar memiliki komponen kriptografis yang diperoleh dari request.body fungsi ini.
-    2. Buat suatu fungsi baru (endpoint baru) untuk update_session() yang akan megubah bagian eligible_to_claim_credit menjadi True/False.
-    3. Implementasi nomor 2 dapat dilakukan dengan memberikan suatu metode autentikasi sehingga hanya bisa diakses oleh localhost / orang yang ber-otoritas.
-    4. Di dalam tasks.py pada bagian mengirimkan eligibility user untuk credit claim, "zk_post(ZK_URL_DATA_SUBMISSION, json.loads(request.body.decode('utf-8')))" dikirimkan disana
-    	dengan data 'request.body' ini diubah menjadi komponen kriptografis yang di ambil dari model Participation.
-    5. Dengan demikian, kita bisa menentukan verifikasi nzkpCm, time slot, dan duplikasi data di TD sebelum memberikan eligibilitas credit_claim ke pengguna.
-    '''
+
     zk_resp = zk_post(ZK_URL_DATA_SUBMISSION, json.loads(request.body.decode('utf-8')))
     zk_resp = zk_resp.get("submission_success")
     
@@ -504,25 +498,43 @@ def profile_history_last_num_history(request, last_num_history):
 #### ZK IMPLEMENTATION ####
 
 def generate_zk_response_err(request, msg):
+    '''
+    This function is used to make success response for the user.
+    '''
     resp = {'status': 'ERR', 'path': request.path, 'msg': msg, 'zk': []}
     return JsonResponse(resp, safe=False, status=500)
 
 def generate_zk_response_ok(request, msg, data):
+    '''
+    This function is used to make success response for the user.
+    '''
     resp = {'status': 'OK', 'path': request.path, 'msg': msg, 'zk': data}
     return JsonResponse(resp, safe=False, status=200)
 
 def zk_post(url, json_obj):
+    '''
+    This function is used to make POST request to the Zero Knowledge Service.
+    '''
     headers = {"Content-Type":"application/json"}
     return json.loads(requests.post(url, json=json_obj, headers=headers).text)
 
 @csrf_exempt
 def zk_serve_crypto_info(request):
+    '''
+    This function is used in System Setup sub-protocol of privacy preserving protocol.
+    This function will expose generator function g and h so that the client can have the 
+    same g and h with the server.
+    '''
     message = "ZK Crypto info service"
     response = json.loads(requests.get(ZK_URL_CRYPTO_INFO).text)
     return generate_zk_response_ok(request, message, response)
 
 @csrf_exempt
 def zk_register(request):
+    '''
+    This function is used in User Registration sub-protocol of privacy preserving protocol.
+    This function handles the user registration and credential making.
+    '''
     subscriber_uuid = request.headers['Subscriber-Uuid']
     response = zk_post(ZK_URL_REGISTER, json.loads(request.body.decode('utf-8')))
     
@@ -537,35 +549,19 @@ def zk_register(request):
         ret = generate_zk_response_err(request, message)
     return ret
 
-@csrf_exempt
-def zk_get_session(request):
-    subscriber_uuid = request.headers['Subscriber-Uuid']
-    zk_session_manager.add_session(subscriber_uuid)
-
-    message = "ZK session added successfully"
-    response = {"success": True}
-    return generate_zk_response_ok(request, message, response)
-
 # ZK SUBMIT DATA IS HANDLED BY FUNCTION "participate_zone_spot_status" ABOVE
 
 # step 1 of credit claiming protocol, verifying user credential and nzkpCm[s]
 @csrf_exempt
 def zk_claim_verify_credential(request):
+    '''
+    This function is used in Credit Claiming sub-protocol of privacy preserving protocol.
+    This function handles the 1/3 step which is verifying user's credential and his eligibility 
+    to claim reward.
+    '''
     subscriber_uuid = request.headers['Subscriber-Uuid']
     session = zk_session_manager.get_session(subscriber_uuid)
 
-    '''
-    For the next researcher, currently the app still relly on client side trust.
-    This way, if the endpoints is queried by client, then it is assumed True that
-    the client is eligible to claim credits. However, we should check first if client is eligible
-    to claim credit of not in the sessions. The current researher can't find way to communicate
-    between tasks.py to notify views.py that client with uuid of X is eligible to claim credit.
-
-    The code should look like following (replace this comment section with this code):
-        **if not session.eligible_to_claim_credit:
-            message = "Not eligible to claim, can not claim reward"
-            return generate_zk_response_err(request, message)**
-    '''
     if not session.eligible_to_claim_credit:
         message = "Not eligible to claim, can not claim reward"
         return generate_zk_response_err(request, message)
@@ -585,6 +581,10 @@ def zk_claim_verify_credential(request):
 # step 2 of credit claiming protocol, verifying user Cm(q)
 @csrf_exempt
 def zk_claim_verify_q(request):
+    '''
+    This function is used in Credit Claiming sub-protocol of privacy preserving protocol.
+    This function handles the 2/3 step which is verifyng user unique identifier q and Cm(q).
+    '''
     subscriber_uuid = request.headers['Subscriber-Uuid']
     session = zk_session_manager.get_session(subscriber_uuid)
     
@@ -607,6 +607,10 @@ def zk_claim_verify_q(request):
 # step 3 of credit claiming protocol, giving reward.
 @csrf_exempt
 def zk_claim_reward(request):
+    '''
+    This function is used in Credit Claiming sub-protocol of privacy preserving protocol.
+    This function handles the 3/3 step which is giving reward to user.
+    '''
     subscriber_uuid = request.headers['Subscriber-Uuid']
     session = zk_session_manager.get_session(subscriber_uuid)
     if not session.q_verified:
@@ -620,9 +624,23 @@ def zk_claim_reward(request):
     return ret
 
 
-## UPDATE SESSION
+## SESSIONS
+@csrf_exempt
+def zk_get_session(request):
+    subscriber_uuid = request.headers['Subscriber-Uuid']
+    zk_session_manager.add_session(subscriber_uuid)
+
+    message = "ZK session added successfully"
+    response = {"success": True}
+    return generate_zk_response_ok(request, message, response)
+
 @csrf_exempt
 def zk_update_session(request):
+    '''
+    This function is used to update user session on eligibility_to_claim_credit, 
+    this will be accessed by server's background task and need the session_secret 
+    to be able to change a user session.
+    '''
     data = json.loads(request.body.decode('utf-8'))
     passwd = data.get('session_secret')
     if passwd != SESSION_SECRET:
