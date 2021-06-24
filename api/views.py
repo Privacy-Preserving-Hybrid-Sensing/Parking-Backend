@@ -331,31 +331,43 @@ def participate_zone_spot_status(request, zone_id, spot_id, str_status):
 
     # [GG] Requesting to ZK microservice (submitting user participation),
     # ZK response to client for data submission will be handled by tasks.py asynchronously
-    zk_post(ZK_URL_DATA_SUBMISSION, json.loads(request.body.decode('utf-8')))
+    '''
+    Untuk peneliti berikutnya, implementasi ini dapat ditingkatkan karena hasil verifikasi nzkpCm dan pengecekan duplikasi TD menjadi
+    tidak terlalu berpengaruh terhadap credit claiming pengguna. Seharusnya, implementasi dapat ditingkatkan sebagai berikut:
+    1. Ubah model Participation agar memiliki komponen kriptografis yang diperoleh dari request.body fungsi ini.
+    2. Buat suatu fungsi baru (endpoint baru) untuk update_session() yang akan megubah bagian eligible_to_claim_credit menjadi True/False.
+    3. Implementasi nomor 2 dapat dilakukan dengan memberikan suatu metode autentikasi sehingga hanya bisa diakses oleh localhost / orang yang ber-otoritas.
+    4. Di dalam tasks.py pada bagian mengirimkan eligibility user untuk credit claim, "zk_post(ZK_URL_DATA_SUBMISSION, json.loads(request.body.decode('utf-8')))" dikirimkan disana
+    	dengan data 'request.body' ini diubah menjadi komponen kriptografis yang di ambil dari model Participation.
+    5. Dengan demikian, kita bisa menentukan verifikasi nzkpCm, time slot, dan duplikasi data di TD sebelum memberikan eligibilitas credit_claim ke pengguna.
+    '''
+    zk_resp = zk_post(ZK_URL_DATA_SUBMISSION, json.loads(request.body.decode('utf-8')))
+    zk_resp = json.loads(zk_resp)["submission_success"]
     
-    data = Participation.participate(
-      parking_spot, 
-      subscriber_uuid,
-      value_participation, 
-      DEFAULT_MINUTE_THRESHOLD
-    )
-
-
-    tmp = {
-      'id': data.id,
-      'ts_create': data.ts_create,
-      'ts_update': data.ts_update,
-      'zone_id': data.parking_spot.zone.id,
-      'zone_name': data.parking_spot.zone.name,
-      'spot_id': data.parking_spot.id,
-      'spot_name': data.parking_spot.name,
-      'previous_value': data.previous_value,
-      'participation_value': data.participation_value,
-      'incentive_value': data.incentive_value,
-      'incentive_processed': data.incentive_processed
-    }
-
-    msg = "Participation OK"
+    tmp = {'zk_success' : False}
+    msg = "Participation ERROR"
+    if zk_resp:
+        data = Participation.participate(
+          parking_spot, 
+          subscriber_uuid,
+          value_participation, 
+          DEFAULT_MINUTE_THRESHOLD
+        )
+        tmp = {
+          'id': data.id,
+          'ts_create': data.ts_create,
+          'ts_update': data.ts_update,
+          'zone_id': data.parking_spot.zone.id,
+          'zone_name': data.parking_spot.zone.name,
+          'spot_id': data.parking_spot.id,
+          'spot_name': data.parking_spot.name,
+          'previous_value': data.previous_value,
+          'participation_value': data.participation_value,
+          'incentive_value': data.incentive_value,
+          'incentive_processed': data.incentive_processed, 
+          'zk_success' : True
+        }
+        msg = "Participation OK"
     return generate_dict_response_ok(request, msg, tmp)
 
 
