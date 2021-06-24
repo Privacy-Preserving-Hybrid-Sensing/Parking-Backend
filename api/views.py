@@ -346,7 +346,7 @@ def participate_zone_spot_status(request, zone_id, spot_id, str_status):
     zk_resp = zk_post(ZK_URL_DATA_SUBMISSION, json.loads(request.body.decode('utf-8')))
     zk_resp = json.loads(zk_resp)["submission_success"]
     
-    tmp = {'zk_success' : False}
+    tmp = {'zk_success' : "false"}
     msg = "Participation ERROR"
     if zk_resp:
         data = Participation.participate(
@@ -367,7 +367,7 @@ def participate_zone_spot_status(request, zone_id, spot_id, str_status):
           'participation_value': data.participation_value,
           'incentive_value': data.incentive_value,
           'incentive_processed': data.incentive_processed, 
-          'zk_success' : True
+          'zk_success' : "true"
         }
         msg = "Participation OK"
     return generate_dict_response_ok(request, msg, tmp)
@@ -569,7 +569,7 @@ def zk_claim_verify_credential(request):
     if not session.eligible_to_claim_credit:
         message = "Not eligible to claim, can not claim reward"
         return generate_zk_response_err(request, message)
-        
+
     response = zk_post(ZK_URL_VERIFY_CREDENTIAL, json.loads(request.body.decode('utf-8')))
     ret = {}
     if response["verification_success"] == "true":
