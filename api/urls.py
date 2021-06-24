@@ -6,6 +6,7 @@ from .views import profile_summary, profile_participations_last_num_participatio
 from .views import participate_zone_spot_status
 from .views import profile_history_last_num_history
 from .views import zk_serve_crypto_info, zk_register, zk_claim_verify_credential, zk_claim_verify_q, zk_claim_reward
+from .views import zk_update_session
 # from .views import parking_spots_get_all, parking_spots_get_id, parking_spots_search
 
 urlpatterns = [
@@ -29,4 +30,5 @@ urlpatterns = [
     path("zk/claim-verify-credential", zk_claim_verify_credential, name="zk_claim_verify_credential"),
     path("zk/claim-verify-q", zk_claim_verify_q, name="zk_claim_verify_q"),
     path("zk/claim-reward", zk_claim_reward, name="zk_claim_reward"),
+    path("zk/update-session", zk_update_session, name="zk_update_session"),
 ]

@@ -23,6 +23,8 @@ ZK_URL_VERIFY_CREDENTIAL = ZK_HOST + "claimVerifyCredential"
 ZK_URL_VERIFY_Q = ZK_HOST + "claimVerifyQ"
 ZK_URL_CLAIM_REWARD = ZK_HOST + "claimReward"
 
+SESSION_SECRET = "secret-string-123"
+
 @csrf_exempt
 @required_field
 def summary_all(request):
@@ -564,6 +566,10 @@ def zk_claim_verify_credential(request):
             message = "Not eligible to claim, can not claim reward"
             return generate_zk_response_err(request, message)**
     '''
+    if not session.eligible_to_claim_credit:
+        message = "Not eligible to claim, can not claim reward"
+        return generate_zk_response_err(request, message)
+        
     response = zk_post(ZK_URL_VERIFY_CREDENTIAL, json.loads(request.body.decode('utf-8')))
     ret = {}
     if response["verification_success"] == "true":
@@ -612,3 +618,20 @@ def zk_claim_reward(request):
         zk_session_manager.reset_session(subscriber_uuid)
         ret = generate_zk_response_ok(request, message, response) 
     return ret
+
+
+## UPDATE SESSION
+@csrf_exempt
+def zk_update_session(request):
+    data = json.loads(request.body.decode('utf-8'))
+    passwd = data.get('session_secret')
+    if passwd != SESSION_SECRET:
+      return generate_zk_response_err(request, "Not Authorized")
+
+    subscriber_uuid = data.get('subscriber_uuid')
+    session = zk_session_manager.get_session(subscriber_uuid)
+    session.eligible_to_claim_credit = True
+    return generate_zk_response_ok(request, "Session Changed", {'success' : True})
+
+def get_session_secret():
+    return SESSION_SECRET

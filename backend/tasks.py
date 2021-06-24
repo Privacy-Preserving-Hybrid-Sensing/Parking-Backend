@@ -1,3 +1,4 @@
+import requests
 from background_task import background
 from django.core.serializers.json import DjangoJSONEncoder
 from logging import getLogger
@@ -14,6 +15,7 @@ from django.db.models.functions import Cast
 from django.db.models import TextField
 from .amqppublisher import AMQPPublisher
 from django.db.models import Avg, Max, Min, Sum
+from api.views import get_session_secret
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -24,6 +26,10 @@ environ.Env.read_env(BASE_DIR + "/.env")  # reading .env file
 
 PROCESSING_TIME_WINDOW = 300    # IN SECONDS (300 seconds => 5 minutes)
 PROCESSING_INTERVAL = 10        # IN SECONDS
+
+# ZK Session
+SESSION_SECRET = get_session_secret()
+SESSION_ENDPOINT = "http://0.0.0.0:8000/api/zk/update-session"
 
 
 # DEFAULT_PARTICIPANT_TO_SERVER_ROUTING_KEY = "PARTICIPANT_TO_SERVER"
@@ -179,6 +185,14 @@ class CREDIT_Thread(threading.Thread):
                 zk_claim_eligibility = "false"
                 if credit_cnt == 1:
                     zk_claim_eligibility = "true"
+
+                    # Update User session to let views know that the user is eligible to claim credit.
+                    json_data = {
+                        'subscriber_uuid' : participant_uuid,
+                        'session_secret' : SESSION_SECRET
+                    }
+                    headers = {"Content-Type":"application/json"}
+                    requests.post(SESSION_ENDPOINT, json=json_data, headers=headers)
                 
                 zk_submission_response = {
                     "status": "OK", 
